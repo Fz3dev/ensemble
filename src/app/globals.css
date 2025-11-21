@@ -1,0 +1,166 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Ensemble Theme - "Chaleureux & Éditorial Chic" */
+    /* Background: Crème d'Avoine #FDF8F0 */
+    --background: 37 71% 96%;
+    /* Foreground: Marron Glacé #705E52 */
+    --foreground: 22 16% 40%;
+
+    /* Card colors - slightly lighter than background for depth */
+    --card: 37 71% 98%;
+    --card-foreground: 22 16% 40%;
+
+    /* Popover colors */
+    --popover: 37 71% 98%;
+    --popover-foreground: 22 16% 40%;
+
+    /* Primary: Vert Forêt Clair #95B89B */
+    --primary: 131 23% 66%;
+    --primary-foreground: 37 71% 96%;
+
+    /* Secondary: Jaune Soleil #EBD399 */
+    --secondary: 45 62% 76%;
+    --secondary-foreground: 22 16% 40%;
+
+    /* Muted - subtle gray-beige */
+    --muted: 37 20% 90%;
+    --muted-foreground: 22 16% 50%;
+
+    /* Accent - warm accent */
+    --accent: 45 62% 88%;
+    --accent-foreground: 22 16% 40%;
+
+    /* Destructive: Rouge Brique #B07D6C */
+    --destructive: 14 33% 56%;
+    --destructive-foreground: 37 71% 96%;
+
+    /* Borders and inputs - subtle warm gray */
+    --border: 37 20% 85%;
+    --input: 37 20% 85%;
+    --ring: 131 23% 66%;
+
+    /* Radius - generous rounding */
+    --radius: 0.75rem;
+    /* 12px base */
+  }
+
+  .dark {
+    /* Dark Mode - Warm & Elegant Palette */
+    /* Background: Gris Ardoise #2A2F33 - rgb(42, 47, 51) */
+    --background: 200 10% 18%;
+    /* Foreground: Blanc Cassé #EDE5DC - rgb(237, 229, 220) */
+    --foreground: 32 35% 90%;
+
+    /* Card: Gris Profond #3A3F44 - rgb(58, 63, 68) for elevation */
+    --card: 210 8% 25%;
+    --card-foreground: 32 35% 90%;
+
+    --popover: 210 8% 25%;
+    --popover-foreground: 32 35% 90%;
+
+    /* Primary: Vert Menthe #B9D4BF - rgb(185, 212, 191) */
+    --primary: 133 26% 78%;
+    --primary-foreground: 200 10% 18%;
+
+    /* Secondary: Jaune Pâle #FBE9B9 - rgb(251, 233, 185) */
+    --secondary: 44 89% 85%;
+    --secondary-foreground: 200 10% 18%;
+
+    /* Muted text: Gris Clair #B0B0B0 - rgb(176, 176, 176) */
+    --muted: 210 8% 30%;
+    --muted-foreground: 0 0% 69%;
+
+    --accent: 133 26% 35%;
+    --accent-foreground: 32 35% 90%;
+
+    /* Destructive: soft coral */
+    --destructive: 14 50% 70%;
+    --destructive-foreground: 200 10% 18%;
+
+    /* Border: subtle separation */
+    --border: 210 8% 33%;
+    --input: 210 8% 30%;
+    --ring: 133 26% 78%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    /* Smooth transitions for theme changes */
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Typography Hierarchy */
+  /* Cormorant Garamond Bold - ONLY for major H1 titles */
+  h1 {
+    font-family: var(--font-cormorant), serif;
+  }
+
+  /* Outfit - for section headings (H2-H6) */
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-outfit), sans-serif;
+    font-weight: 600;
+  }
+
+  /* Remove button default styles for cleaner look */
+  button {
+    font-family: var(--font-outfit), sans-serif;
+  }
+
+  p,
+  span,
+  div {
+    font-family: var(--font-cabin), sans-serif;
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Editorial spacing utilities (8px grid) */
+  .space-editorial-sm {
+    @apply space-y-2;
+    /* 8px */
+  }
+
+  .space-editorial {
+    @apply space-y-4;
+    /* 16px */
+  }
+
+  .space-editorial-lg {
+    @apply space-y-6;
+    /* 24px */
+  }
+
+  /* Pill button utility */
+  .btn-pill {
+    @apply rounded-full;
+  }
+
+  /* Soft shadow for elevation */
+  .shadow-soft {
+    box-shadow: 0 4px 12px rgba(112, 94, 82, 0.08);
+  }
+
+  .shadow-soft-lg {
+    box-shadow: 0 8px 24px rgba(112, 94, 82, 0.12);
+  }
+}

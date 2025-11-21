@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Using sqlite for local MVP simplicity, easy to switch to postgres
+  url      = env("DATABASE_URL")
+}
+
+// Models
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?   // Hashed password
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  memberships   Member[]
+  joinRequests  JoinRequest[]
+}
+
+model Household {
+  id          String   @id @default(cuid())
+  name        String
+  inviteCode  String   @unique @default(cuid()) // Simple invite code
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members      Member[]
+  events       Event[]
+  tasks        Task[]
+  joinRequests JoinRequest[]
+}
+
+model Member {
+  id          String    @id @default(cuid())
+  type        String    @default("ADULT") // MemberType enum: ADULT, CHILD, PET
+  role        String    @default("MEMBER") // Role enum: ADMIN, MEMBER, GUEST
+  color       String    @default("#3b82f6") // Default blue
+  nickname    String?   // Optional nickname in this household
+  
+  // Optional fields for children
+  age         Int?
+  
+  // Optional fields for pets
+  petType     String?   // DOG, CAT, BIRD, etc.
+  
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  eventParticipations EventParticipant[]
+  assignedTasks       TaskAssignee[]
+  
+  @@unique([userId, householdId])
+}
+
+model JoinRequest {
+  id          String    @id @default(cuid())
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime  @default(now())
+  
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, householdId])
+}
+
+
+model Event {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime
+  category    String        @default("OTHER") // EventCategory enum
+  isAllDay    Boolean       @default(false)
+  location    String?
+  
+  householdId String
+  household   Household     @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  
+  seriesId    String?
+  series      EventSeries?  @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+
+  participants EventParticipant[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model EventSeries {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  events      Event[]
+}
+
+model EventParticipant {
+  eventId     String
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, memberId])
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      String     @default("TODO") // TaskStatus enum (kept as string for SQLite simplicity, but treated as enum in app)
+  recurrence  String     @default("NONE") // TaskRecurrence enum
+  dueDate     DateTime?
+  
+  householdId String
+  household   Household  @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  
+  assignees   TaskAssignee[]
+
+  completedAt DateTime?
+  completedBy String?    // ID of the member who completed it
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model TaskAssignee {
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  memberId    String
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, memberId])
+}
