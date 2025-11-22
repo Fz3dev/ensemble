@@ -1,15 +1,23 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function Home() {
     const session = await auth();
 
-    if (!session) {
+    if (!session?.user) {
         redirect("/login");
     }
 
-    // If authenticated, redirect to onboarding to select/create household
-    // Or if we had a "last visited household" stored, we could go there.
-    // For now, onboarding handles the "where to go" logic (join or create).
-    redirect("/onboarding");
+    // Check if user is already a member of a household
+    const member = await prisma.member.findFirst({
+        where: { userId: session.user.id }
+    });
+
+    if (member) {
+        redirect(`/household/${member.householdId}`);
+    }
+
+    // If not a member, go to onboarding choice
+    redirect("/onboarding/choice");
 }

@@ -1,14 +1,13 @@
 import { CalendarClient } from "@/components/calendar-client"
 import { EventList } from "@/components/event-list"
-import { Button } from "@/components/ui/button"
 import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { Plus } from "lucide-react"
-import Link from "next/link"
 import { TEXTS } from "@/lib/constants/texts"
 import { MemberFilter } from "@/components/member-filter"
+import { CreateEventButton } from "@/components/create-event-button"
 
 export default async function CalendarPage({
     params,
@@ -71,12 +70,7 @@ export default async function CalendarPage({
                 <h2 className="text-xl font-bold">{TEXTS.navigation.calendar}</h2>
                 <div className="flex items-center gap-2">
                     <MemberFilter members={members} />
-                    <Button size="sm" asChild>
-                        <Link href={`/household/${params.householdId}/calendar/new`}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            {TEXTS.calendar.addEvent}
-                        </Link>
-                    </Button>
+                    <CreateEventButton householdId={params.householdId} members={members} />
                 </div>
             </div>
 

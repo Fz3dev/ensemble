@@ -27,7 +27,8 @@ export const CATEGORY_LABELS = {
   FAMILY: "Famille",
   HEALTH: "Santé",
   EDUCATION: "Éducation",
-  ENTERTAINMENT: "Loisirs",
+
+  LEISURE: "Loisirs",
   OTHER: "Autre"
 }
 
@@ -39,7 +40,7 @@ export function getCategoryColor(category: string): string {
     FAMILY: "#ec4899",
     HEALTH: "#10b981",
     EDUCATION: "#f59e0b",
-    ENTERTAINMENT: "#06b6d4",
+    LEISURE: "#06b6d4",
     OTHER: "#6b7280"
   }
   return colors[category] || colors.OTHER
@@ -64,3 +65,77 @@ export const MEMBER_COLORS = [
   { value: "#78D4D0", label: "Turquoise" },        // HSL(175°, 50%, 68%) - Cyan pastel
   { value: "#F5B98F", label: "Pêche" },            // HSL(25°, 65%, 75%) - Orange doux
 ]
+
+// Calendar Export Helpers
+export function generateGoogleCalendarLink(event: { title: string, description?: string, startTime: Date | string, endTime: Date | string, location?: string }) {
+  const start = new Date(event.startTime).toISOString().replace(/-|:|\.\d+/g, "")
+  const end = new Date(event.endTime).toISOString().replace(/-|:|\.\d+/g, "")
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates: `${start}/${end}`,
+    details: event.description || "",
+    location: event.location || "",
+  })
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
+export function generateICSFile(event: { title: string, description?: string, startTime: Date | string, endTime: Date | string, location?: string }) {
+  const start = new Date(event.startTime).toISOString().replace(/-|:|\.\d+/g, "")
+  const end = new Date(event.endTime).toISOString().replace(/-|:|\.\d+/g, "")
+
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Ensemble//App//FR",
+    "BEGIN:VEVENT",
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${event.title}`,
+    `DESCRIPTION:${event.description || ""}`,
+    `LOCATION:${event.location || ""}`,
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\n")
+
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" })
+  return URL.createObjectURL(blob)
+}
+
+// Robust Copy to Clipboard (works in non-secure contexts)
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    // Try modern API first
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text)
+      return true
+    } else {
+      throw new Error("Clipboard API unavailable")
+    }
+  } catch (err) {
+    // Fallback for non-secure contexts (e.g. local dev via IP)
+    try {
+      const textArea = document.createElement("textarea")
+      textArea.value = text
+
+      // Ensure it's not visible but part of DOM
+      textArea.style.position = "fixed"
+      textArea.style.left = "-9999px"
+      textArea.style.top = "0"
+      document.body.appendChild(textArea)
+
+      textArea.focus()
+      textArea.select()
+
+      const successful = document.execCommand('copy')
+      document.body.removeChild(textArea)
+
+      return successful
+    } catch (fallbackErr) {
+      console.error("Copy failed:", fallbackErr)
+      return false
+    }
+  }
+}

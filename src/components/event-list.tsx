@@ -115,7 +115,10 @@ export function EventList({ events, members }: EventListProps) {
                                                     <h4 className="font-medium">{event.title}</h4>
                                                     <div className="flex items-center text-sm text-muted-foreground mt-1">
                                                         <Clock className="w-3 h-3 mr-1" />
-                                                        {format(new Date(event.startTime), "HH:mm")} - {format(new Date(event.endTime), "HH:mm")}
+                                                        {format(new Date(event.startTime), "HH:mm") === "00:00" && format(new Date(event.endTime), "HH:mm") === "23:59"
+                                                            ? "Toute la journée"
+                                                            : `${format(new Date(event.startTime), "HH:mm")} - ${format(new Date(event.endTime), "HH:mm")}`
+                                                        }
                                                     </div>
                                                 </div>
                                             </CardContent>

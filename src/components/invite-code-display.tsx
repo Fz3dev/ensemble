@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Check, Copy, Share2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
+import { copyToClipboard } from "@/lib/utils"
 
 interface InviteCodeDisplayProps {
     inviteCode: string
@@ -14,14 +15,14 @@ interface InviteCodeDisplayProps {
 export function InviteCodeDisplay({ inviteCode, householdName }: InviteCodeDisplayProps) {
     const [copied, setCopied] = useState(false)
 
-    const copyToClipboard = async () => {
-        try {
-            await navigator.clipboard.writeText(inviteCode)
+    const handleCopy = async () => {
+        const success = await copyToClipboard(inviteCode)
+        if (success) {
             setCopied(true)
             toast.success("Code copié !")
             setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            toast.error("Erreur lors de la copie")
+        } else {
+            toast.error("Impossible de copier automatiquement")
         }
     }
 
@@ -36,8 +37,12 @@ export function InviteCodeDisplay({ inviteCode, householdName }: InviteCodeDispl
             }
         } else {
             // Fallback to copy
-            await navigator.clipboard.writeText(text)
-            toast.success("Message copié !")
+            const success = await copyToClipboard(text)
+            if (success) {
+                toast.success("Message copié !")
+            } else {
+                toast.error("Impossible de copier le message")
+            }
         }
     }
 
@@ -46,7 +51,7 @@ export function InviteCodeDisplay({ inviteCode, householdName }: InviteCodeDispl
             <CardContent className="p-6">
                 <div className="space-y-4">
                     <div>
-                        <label className="text-sm font-medium text-gray-700 dark:text-foreground block mb-2">
+                        <label className="text-sm font-medium text-muted-foreground block mb-2">
                             Code d'invitation
                         </label>
                         <div className="flex items-center gap-2">
@@ -56,7 +61,7 @@ export function InviteCodeDisplay({ inviteCode, householdName }: InviteCodeDispl
                             <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={copyToClipboard}
+                                onClick={handleCopy}
                                 className="h-12 w-12"
                             >
                                 {copied ? (

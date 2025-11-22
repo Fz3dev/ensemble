@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { register } from "@/server/actions"
 import { signIn } from "next-auth/react"
 import { PageTransition } from "@/components/animations"
-import { Sparkles, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
 import { TEXTS } from "@/lib/constants/texts"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -59,27 +59,25 @@ export default function LoginPage() {
             <div className="absolute top-[40%] -right-[10%] h-[400px] w-[400px] rounded-full bg-blue-400/20 blur-[100px]" />
             <div className="absolute -bottom-[10%] left-[20%] h-[300px] w-[300px] rounded-full bg-pink-400/20 blur-[100px]" />
 
-            <PageTransition className="z-10 w-full max-w-md p-6">
-                <div className="mb-8 text-center">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30">
-                        <Sparkles className="h-8 w-8" />
-                    </div>
+            <PageTransition className="z-10 w-full max-w-md p-4">
+                <div className="mb-2 text-center">
                     <div className="relative h-16 w-24 mx-auto mb-2">
                         <NextImage
                             src="/logo.png?v=2"
                             alt="Logo"
                             fill
+                            sizes="96px"
                             className="object-contain"
                             priority
                         />
                     </div>
                     <h1 className="text-4xl font-bold tracking-tight text-primary font-serif">Ensemble</h1>
-                    <p className="mt-3 text-lg text-muted-foreground">
+                    <p className="mt-1 text-lg text-muted-foreground">
                         {TEXTS.auth.loginTagline}
                     </p>
                 </div>
 
-                <div className="space-y-6 rounded-3xl border border-white/20 bg-white/70 p-8 shadow-2xl backdrop-blur-xl dark:bg-black/50">
+                <div className="space-y-4 rounded-3xl border border-white/20 bg-white/70 p-5 shadow-2xl backdrop-blur-xl dark:bg-black/50">
                     <div className="space-y-4">
                         <form onSubmit={handleLogin} className="space-y-4">
                             <div className="space-y-2">

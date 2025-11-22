@@ -17,13 +17,15 @@ interface JoinRequest {
     }
 }
 
+import { useRouter } from "next/navigation"
+
 interface JoinRequestCardProps {
     request: JoinRequest
-    onUpdate: () => void
 }
 
-export function JoinRequestCard({ request, onUpdate }: JoinRequestCardProps) {
+export function JoinRequestCard({ request }: JoinRequestCardProps) {
     const [isProcessing, setIsProcessing] = useState(false)
+    const router = useRouter()
 
     const handleApprove = async () => {
         setIsProcessing(true)
@@ -31,7 +33,7 @@ export function JoinRequestCard({ request, onUpdate }: JoinRequestCardProps) {
 
         if (res?.success) {
             toast.success(`${request.user.name} a rejoint la famille !`)
-            onUpdate()
+            router.refresh()
         } else {
             toast.error(res?.error || "Erreur")
             setIsProcessing(false)
@@ -44,7 +46,7 @@ export function JoinRequestCard({ request, onUpdate }: JoinRequestCardProps) {
 
         if (res?.success) {
             toast.success("Demande refusée")
-            onUpdate()
+            router.refresh()
         } else {
             toast.error(res?.error || "Erreur")
             setIsProcessing(false)

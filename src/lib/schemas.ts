@@ -30,7 +30,9 @@ export const CreateEventSchema = EventSchema.extend({
     }),
 })
 
-export const UpdateEventSchema = EventSchema.partial()
+export const UpdateEventSchema = EventSchema.partial().extend({
+    date: z.string().optional(), // Optional date field for updating event date
+})
 
 export const TaskSchema = z.object({
     title: z.string().min(1, "Le titre est requis"),
@@ -51,3 +53,7 @@ export const MemberSchema = z.object({
 })
 
 export const CreateMemberSchema = MemberSchema
+
+export const JoinHouseholdSchema = z.object({
+    inviteCode: z.string().min(1, "Le code d'invitation est requis"),
+})

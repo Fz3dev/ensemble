@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import confetti from "canvas-confetti"
 
 interface TaskCardProps {
     task: any
@@ -33,7 +34,14 @@ export function TaskCard({ task }: TaskCardProps) {
             setIsCompleted(!newState)
             toast.error("Erreur lors de la mise à jour")
         } else if (newState) {
-            toast.success("Tâche terminée !")
+            // Trigger confetti when completing a task
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#95B89B', '#FDF8F0', '#705E52']
+            })
+            toast.success("Tâche terminée ! 🎉")
         }
 
         setIsLoading(false)
@@ -56,6 +64,10 @@ export function TaskCard({ task }: TaskCardProps) {
                     {isCompleted && <CheckCircle2 className="h-4 w-4" />}
                 </button>
 
+                {task.emoji && (
+                    <span className="text-2xl flex-shrink-0">{task.emoji}</span>
+                )}
+
                 <div className="flex-1 min-w-0">
                     <h4 className={cn(
                         "font-medium truncate transition-all",
@@ -64,12 +76,6 @@ export function TaskCard({ task }: TaskCardProps) {
                         {task.title}
                     </h4>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        {task.recurrence !== "NONE" && (
-                            <span className="flex items-center gap-0.5 text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">
-                                <Repeat className="w-3 h-3" />
-                                {task.recurrence === "DAILY" ? "Tous les jours" : task.recurrence === "WEEKLY" ? "Hebdo" : "Mensuel"}
-                            </span>
-                        )}
                         {task.dueDate && (
                             <span className={cn(
                                 new Date(task.dueDate) < new Date() && !isCompleted ? "text-red-500 font-medium" : ""
@@ -85,10 +91,10 @@ export function TaskCard({ task }: TaskCardProps) {
                     {task.assignees?.length > 0 && (
                         <div className="flex -space-x-2">
                             {task.assignees.map((a: any) => (
-                                <Avatar key={a.member.id} className="h-6 w-6 border-2 border-white">
-                                    <AvatarImage src={a.member.user.image} />
+                                <Avatar key={a.member.id} className="h-6 w-6 border-2 border-white dark:border-card">
+                                    <AvatarImage src={a.member.user?.image || undefined} />
                                     <AvatarFallback style={{ backgroundColor: a.member.color }} className="text-[10px] text-white">
-                                        {a.member.user.name?.[0]}
+                                        {(a.member.nickname || a.member.user?.name)?.[0]?.toUpperCase() || "?"}
                                     </AvatarFallback>
                                 </Avatar>
                             ))}

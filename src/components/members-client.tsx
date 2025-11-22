@@ -2,7 +2,7 @@
 
 import { Member } from "@prisma/client"
 import { MemberCard } from "@/components/member-card"
-import { MemberFormDialog } from "@/components/member-form-dialog"
+import { MemberDetailsDrawer } from "@/components/member-details-drawer"
 import { Button } from "@/components/ui/button"
 import { Plus, Users, User, PawPrint, Edit } from "lucide-react"
 import { useState } from "react"
@@ -177,8 +177,8 @@ export function MembersClient({ householdId, members, currentUserId, isAdmin }: 
                 </FadeIn>
             </div>
 
-            {/* Add/Edit Dialog */}
-            <MemberFormDialog
+            {/* Add/Edit Drawer */}
+            <MemberDetailsDrawer
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 householdId={householdId}

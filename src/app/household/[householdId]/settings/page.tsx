@@ -19,7 +19,7 @@ export default async function HouseholdSettingsPage({ params }: PageProps) {
     const session = await auth()
     if (!session?.user) redirect("/login")
 
-    const { householdId } = await params
+    const { householdId } = params
 
     // Get household and check if user is member
     const household = await prisma.household.findUnique({
@@ -54,58 +54,6 @@ export default async function HouseholdSettingsPage({ params }: PageProps) {
             </div>
 
             <div className="space-y-8">
-                {/* Household Info */}
-                <div>
-                    <h3 className="text-lg font-semibold mb-2">{household.name}</h3>
-                    <p className="text-muted-foreground">
-                        {household.members.length} membre{household.members.length > 1 ? "s" : ""}
-                    </p>
-                </div>
-
-                {/* Member Management Section */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Users className="w-5 h-5 text-primary" />
-                        <h3 className="text-lg font-semibold">Gérer ma famille</h3>
-                    </div>
-                    <Link
-                        href={`/household/${householdId}/members`}
-                        className="block p-4 bg-white dark:bg-card border rounded-lg hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors shadow-sm"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="font-medium text-gray-900 dark:text-foreground">Membres de la famille</p>
-                                <p className="text-sm text-muted-foreground">Gérer les profils, enfants et animaux</p>
-                            </div>
-                            <Users className="w-5 h-5 text-muted-foreground" />
-                        </div>
-                    </Link>
-                </div>
-
-                {/* Invite Section (Admin only) */}
-                {isAdmin && (
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <UserPlus className="w-5 h-5 text-purple-600" />
-                            <h3 className="text-lg font-semibold">Inviter des membres</h3>
-                        </div>
-
-                        <InviteCodeDisplay
-                            inviteCode={household.inviteCode}
-                            householdName={household.name}
-                        />
-                    </div>
-                )}
-
-                {/* Appearance Section */}
-                <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                        <Settings className="w-5 h-5 text-primary" />
-                        <h3 className="text-lg font-semibold">Apparence</h3>
-                    </div>
-                    <ThemeToggle />
-                </div>
-
                 {/* Pending Join Requests (Admin only) */}
                 {isAdmin && household.joinRequests.length > 0 && (
                     <div className="space-y-4">
@@ -123,18 +71,69 @@ export default async function HouseholdSettingsPage({ params }: PageProps) {
                                 <JoinRequestCard
                                     key={request.id}
                                     request={request}
-                                    onUpdate={() => {
-                                        // This will trigger a revalidation
-                                    }}
                                 />
                             ))}
                         </div>
                     </div>
                 )}
 
+                {/* Household Info */}
+                <div>
+                    <h3 className="text-lg font-semibold mb-2">{household.name}</h3>
+                    <p className="text-muted-foreground">
+                        {household.members.length} membre{household.members.length > 1 ? "s" : ""}
+                    </p>
+                </div>
+
+                {/* Member Management Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        <h3 className="text-lg font-semibold text-foreground">Gérer ma famille</h3>
+                    </div>
+                    <Link
+                        href={`/household/${householdId}/members`}
+                        className="block p-4 bg-white dark:bg-card border rounded-lg hover:bg-gray-50 dark:hover:bg-muted/50 transition-colors shadow-sm"
+                    >
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="font-medium text-foreground">Membres de la famille</p>
+                                <p className="text-sm text-muted-foreground">Gérer les profils, enfants et animaux</p>
+                            </div>
+                            <Users className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                    </Link>
+                </div>
+
+                {/* Invite Section (Admin only) */}
+                {isAdmin && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <UserPlus className="w-5 h-5 text-primary" />
+                            <h3 className="text-lg font-semibold text-foreground">Inviter des membres</h3>
+                        </div>
+
+                        <InviteCodeDisplay
+                            inviteCode={household.inviteCode}
+                            householdName={household.name}
+                        />
+                    </div>
+                )}
+
+                {/* Appearance Section */}
+                <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        <Settings className="w-5 h-5 text-primary" />
+                        <h3 className="text-lg font-semibold text-foreground">Apparence</h3>
+                    </div>
+                    <ThemeToggle />
+                </div>
+
+
+
                 {/* Coming soon sections */}
                 <div className="border-t pt-8 space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-400">Bientôt disponible</h3>
+                    <h3 className="text-lg font-semibold text-muted-foreground">Bientôt disponible</h3>
                     <div className="grid gap-3">
                         <div className="p-4 bg-gray-100 dark:bg-muted/20 rounded-lg opacity-50">
                             <p className="font-medium">Préférences</p>

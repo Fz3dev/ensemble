@@ -14,6 +14,7 @@ interface Member {
         image: string | null
     }
     color: string
+    nickname?: string | null
 }
 
 interface MemberSelectorProps {
@@ -46,12 +47,12 @@ export function MemberSelector({ members, selectedMemberIds, onSelect }: MemberS
                         onClick={() => toggleMember(member.id)}
                         className={cn(
                             "relative flex flex-col items-center gap-1 transition-all",
-                            isSelected ? "opacity-100 scale-105" : "opacity-60 hover:opacity-80"
+                            isSelected ? "scale-105" : "opacity-70 hover:opacity-100"
                         )}
                     >
                         <div className={cn(
-                            "relative h-10 w-10 rounded-full border-2 transition-all",
-                            isSelected ? "border-primary ring-2 ring-primary ring-offset-2" : "border-transparent"
+                            "relative h-10 w-10 rounded-full transition-all",
+                            isSelected ? "ring-2 ring-primary ring-offset-2" : ""
                         )}>
                             <Avatar className="h-full w-full">
                                 <AvatarImage src={member.user?.image || undefined} />
@@ -60,7 +61,7 @@ export function MemberSelector({ members, selectedMemberIds, onSelect }: MemberS
                                 </AvatarFallback>
                             </Avatar>
                             {isSelected && (
-                                <div className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                <div className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-background">
                                     <Check className="h-3 w-3" />
                                 </div>
                             )}

@@ -11,14 +11,16 @@ import {
     DrawerTrigger,
     DrawerDescription,
 } from "@/components/ui/drawer"
-import { TaskForm } from "@/components/task-form"
+import { EventForm } from "@/components/event-form"
+import { TEXTS } from "@/lib/constants/texts"
 
-interface CreateTaskButtonProps {
+interface CreateEventButtonProps {
     householdId: string
     members: any[]
+    initialData?: any
 }
 
-export function CreateTaskButton({ householdId, members }: CreateTaskButtonProps) {
+export function CreateEventButton({ householdId, members, initialData }: CreateEventButtonProps) {
     const [open, setOpen] = useState(false)
 
     return (
@@ -26,19 +28,20 @@ export function CreateTaskButton({ householdId, members }: CreateTaskButtonProps
             <DrawerTrigger asChild>
                 <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Nouvelle tâche
+                    {TEXTS.calendar.addEvent}
                 </Button>
             </DrawerTrigger>
             <DrawerContent className="max-h-[75vh]">
                 <div className="mx-auto w-full max-w-sm overflow-y-auto">
                     <DrawerHeader>
-                        <DrawerTitle>Nouvelle tâche</DrawerTitle>
-                        <DrawerDescription>Créez une nouvelle tâche pour la famille.</DrawerDescription>
+                        <DrawerTitle>{TEXTS.calendar.addEvent}</DrawerTitle>
+                        <DrawerDescription>Créez un nouvel événement pour la famille.</DrawerDescription>
                     </DrawerHeader>
                     <div className="p-4 pb-8">
-                        <TaskForm
+                        <EventForm
                             householdId={householdId}
                             members={members}
+                            initialData={initialData}
                             onSuccess={() => setOpen(false)}
                         />
                     </div>

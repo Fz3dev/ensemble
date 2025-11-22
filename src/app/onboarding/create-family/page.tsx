@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { PET_TYPE_LABELS } from "@/lib/utils"
+import { PET_TYPE_LABELS, copyToClipboard } from "@/lib/utils"
 
 interface TempMember {
     id: string
@@ -104,14 +104,14 @@ export default function CreateFamilyPage() {
         setMembers(members.filter(m => m.id !== id))
     }
 
-    const copyToClipboard = async () => {
-        try {
-            await navigator.clipboard.writeText(inviteCode)
+    const handleCopy = async () => {
+        const success = await copyToClipboard(inviteCode)
+        if (success) {
             setCopied(true)
             toast.success("Code copié !")
             setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
-            toast.error("Erreur lors de la copie")
+        } else {
+            toast.error("Impossible de copier automatiquement")
         }
     }
 
@@ -125,8 +125,12 @@ export default function CreateFamilyPage() {
                 // User cancelled
             }
         } else {
-            await navigator.clipboard.writeText(text)
-            toast.success("Message copié !")
+            const success = await copyToClipboard(text)
+            if (success) {
+                toast.success("Message copié !")
+            } else {
+                toast.error("Impossible de copier le message")
+            }
         }
     }
 
@@ -136,21 +140,21 @@ export default function CreateFamilyPage() {
     }
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-background p-6">
+        <div className="h-screen flex flex-col items-center pt-12 bg-background p-6 overflow-y-auto">
             <FadeIn className="w-full max-w-2xl">
                 {step < 3 && (
                     <Link
                         href="/onboarding/choice"
-                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+                        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         Retour
                     </Link>
                 )}
 
-                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8">
+                <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-6">
                     {/* Progress indicator */}
-                    <div className="flex items-center justify-center gap-2 mb-8">
+                    <div className="flex items-center justify-center gap-2 mb-6">
                         <div className={`w-3 h-3 rounded-full ${step === 1 ? "bg-primary" : "bg-muted"}`} />
                         <div className={`w-3 h-3 rounded-full ${step === 2 ? "bg-primary" : "bg-muted"}`} />
                         <div className={`w-3 h-3 rounded-full ${step === 3 ? "bg-primary" : "bg-muted"}`} />
@@ -197,11 +201,11 @@ export default function CreateFamilyPage() {
 
                     {/* Step 2: Add members (optional) */}
                     {step === 2 && (
-                        <SlideIn direction="right" className="space-y-6">
+                        <SlideIn direction="right" className="space-y-4">
                             <div className="text-center">
-                                <h2 className="text-2xl font-bold mb-2">Ajouter des membres</h2>
+                                <h2 className="text-2xl font-bold mb-1">Ajouter des membres</h2>
                                 <p className="text-gray-600 text-sm">
-                                    Enfants, animaux... (optionnel, vous pourrez le faire plus tard)
+                                    Enfants, animaux... (optionnel)
                                 </p>
                             </div>
 
@@ -348,7 +352,7 @@ export default function CreateFamilyPage() {
                                         <Button
                                             variant="outline"
                                             size="icon"
-                                            onClick={copyToClipboard}
+                                            onClick={handleCopy}
                                             className="h-12 w-12 flex-shrink-0"
                                         >
                                             {copied ? (

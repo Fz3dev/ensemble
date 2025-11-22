@@ -1,5 +1,7 @@
 "use server"
 
+// Force recompile
+
 import { signIn, signOut } from "@/auth"
 import { PrismaClient } from "@prisma/client"
 import { revalidatePath } from "next/cache"
@@ -7,7 +9,7 @@ import { redirect } from "next/navigation"
 import { z } from "zod"
 import { format } from "date-fns"
 import { auth } from "@/auth"
-import { CreateEventSchema, UpdateEventSchema, CreateTaskSchema, CreateMemberSchema } from "@/lib/schemas"
+import { CreateEventSchema, UpdateEventSchema, CreateTaskSchema, CreateMemberSchema, JoinHouseholdSchema } from "@/lib/schemas"
 import { MEMBER_COLORS } from "@/lib/utils"
 
 const prisma = new PrismaClient()
@@ -104,17 +106,24 @@ export async function createHousehold(formData: FormData) {
 
 export async function joinHousehold(formData: FormData) {
   const session = await auth()
-  if (!session?.user?.id) return { error: "Not authenticated" }
+  if (!session?.user?.id) return { success: false, error: "Not authenticated" }
 
-  const inviteCode = formData.get("inviteCode") as string
-  if (!inviteCode) return { error: "Invite code required" }
+  const validatedFields = JoinHouseholdSchema.safeParse({
+    inviteCode: formData.get("inviteCode")
+  })
+
+  if (!validatedFields.success) {
+    return { success: false, error: "Code d'invitation requis" }
+  }
+
+  const { inviteCode } = validatedFields.data
 
   try {
     const household = await prisma.household.findUnique({
       where: { inviteCode }
     })
 
-    if (!household) return { error: "Code d'invitation invalide" }
+    if (!household) return { success: false, error: "Code d'invitation invalide" }
 
     // Check if already member
     const existingMember = await prisma.member.findUnique({
@@ -126,7 +135,7 @@ export async function joinHousehold(formData: FormData) {
       }
     })
 
-    if (existingMember) return { error: "Vous êtes déjà membre de cette famille" }
+    if (existingMember) return { success: false, error: "Vous êtes déjà membre de cette famille" }
 
     // Check if there's already a pending request
     const existingRequest = await prisma.joinRequest.findUnique({
@@ -143,7 +152,7 @@ export async function joinHousehold(formData: FormData) {
         return { success: true, pending: true }
       }
       if (existingRequest.status === "REJECTED") {
-        return { error: "Votre demande a été refusée" }
+        return { success: false, error: "Votre demande a été refusée" }
       }
     }
 
@@ -159,7 +168,7 @@ export async function joinHousehold(formData: FormData) {
     return { success: true, pending: true }
   } catch (error) {
     console.error(error)
-    return { error: "Erreur lors de la demande" }
+    return { success: false, error: "Erreur lors de la demande" }
   }
 }
 
@@ -496,6 +505,7 @@ export async function updateEvent(eventId: string, formData: FormData, updateSer
 
   const rawData = {
     title: formData.get("title"),
+    date: formData.get("date"), // Get the new date from form
     startTime: formData.get("startTime"),
     endTime: formData.get("endTime"),
     category: formData.get("category"),
@@ -509,7 +519,7 @@ export async function updateEvent(eventId: string, formData: FormData, updateSer
     return { error: "Données invalides" }
   }
 
-  const { title, startTime, endTime, category, participantIds } = validatedFields.data
+  const { title, date, startTime, endTime, category, participantIds } = validatedFields.data
 
   try {
     const event = await prisma.event.findUnique({ where: { id: eventId } })
@@ -554,11 +564,38 @@ export async function updateEvent(eventId: string, formData: FormData, updateSer
 
     } else {
       // Single event update
-      if (startTime) {
-        dataToUpdate.startTime = new Date(`${format(event.startTime, 'yyyy-MM-dd')}T${startTime}`)
+      // Parse the new date if provided
+      let newDate = format(event.startTime, 'yyyy-MM-dd')
+      if (date) {
+        try {
+          // Try parsing as JSON array first (from MultiDatePicker)
+          const parsedDates = JSON.parse(date)
+          if (Array.isArray(parsedDates) && parsedDates.length > 0) {
+            newDate = format(new Date(parsedDates[0]), 'yyyy-MM-dd')
+          }
+        } catch (e) {
+          // If JSON parse fails, it might be a simple date string or invalid
+          // Verify if it's a valid date string
+          const validDate = new Date(date)
+          if (!isNaN(validDate.getTime())) {
+            newDate = format(validDate, 'yyyy-MM-dd')
+          }
+        }
       }
+
+      // Combine new date with times
+      if (startTime) {
+        dataToUpdate.startTime = new Date(`${newDate}T${startTime}`)
+      } else if (date) {
+        // If only date changed, keep the original time
+        dataToUpdate.startTime = new Date(`${newDate}T${format(event.startTime, 'HH:mm')}`)
+      }
+
       if (endTime) {
-        dataToUpdate.endTime = new Date(`${format(event.endTime, 'yyyy-MM-dd')}T${endTime}`)
+        dataToUpdate.endTime = new Date(`${newDate}T${endTime}`)
+      } else if (date) {
+        // If only date changed, keep the original time
+        dataToUpdate.endTime = new Date(`${newDate}T${format(event.endTime, 'HH:mm')}`)
       }
 
       await prisma.event.update({
@@ -608,7 +645,8 @@ export async function createTask(householdId: string, formData: FormData) {
   }
 
   const { title, description, recurrence, dueDate, assigneeIds } = validatedFields.data
-  console.log("Validated Data:", { title, description, recurrence, dueDate, assigneeIds })
+  const emoji = formData.get("emoji") as string | null
+  console.log("Validated Data:", { title, description, recurrence, dueDate, assigneeIds, emoji })
 
   try {
     console.log("Attempting Prisma Create...")
@@ -616,6 +654,7 @@ export async function createTask(householdId: string, formData: FormData) {
       data: {
         title,
         description,
+        emoji,
         recurrence: recurrence as any, // Ensure this matches your Prisma schema type (String or Enum)
         dueDate: dueDate ? new Date(dueDate) : null,
         householdId,
@@ -689,6 +728,69 @@ export async function toggleTask(taskId: string, currentStatus: string) {
     revalidatePath("/")
     return { success: true }
   } catch (error) {
+    return { error: "Failed to update task" }
+  }
+}
+
+export async function deleteTask(taskId: string) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "Not authenticated" }
+
+  try {
+    const task = await prisma.task.findUnique({ where: { id: taskId } })
+    if (!task) return { error: "Task not found" }
+
+    await prisma.task.delete({ where: { id: taskId } })
+
+    revalidatePath(`/household/${task.householdId}`)
+    return { success: true }
+  } catch (error) {
+    console.error(error)
+    return { error: "Failed to delete task" }
+  }
+}
+
+export async function updateTask(taskId: string, formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "Not authenticated" }
+
+  try {
+    const task = await prisma.task.findUnique({ where: { id: taskId } })
+    if (!task) return { error: "Task not found" }
+
+    const title = formData.get("title") as string
+    const description = formData.get("description") as string | null
+    const emoji = formData.get("emoji") as string | null
+    const recurrence = formData.get("recurrence") as string
+    const dueDate = formData.get("dueDate") as string | null
+    const assigneeIds = formData.getAll("assigneeIds") as string[]
+
+    await prisma.task.update({
+      where: { id: taskId },
+      data: {
+        title,
+        description,
+        emoji,
+        recurrence: recurrence as any,
+        dueDate: dueDate ? new Date(dueDate) : null,
+      }
+    })
+
+    // Update assignees
+    await prisma.taskAssignee.deleteMany({ where: { taskId } })
+    if (assigneeIds.length > 0) {
+      await prisma.taskAssignee.createMany({
+        data: assigneeIds.map(memberId => ({
+          taskId,
+          memberId
+        }))
+      })
+    }
+
+    revalidatePath(`/household/${task.householdId}`)
+    return { success: true }
+  } catch (error) {
+    console.error(error)
     return { error: "Failed to update task" }
   }
 }

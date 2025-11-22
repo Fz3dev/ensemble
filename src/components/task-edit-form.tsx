@@ -10,23 +10,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { createTask } from "@/server/actions"
+import { updateTask } from "@/server/actions"
 import { TASK_RECURRENCE_LABELS } from "@/lib/utils"
 import { MemberSelector } from "@/components/member-selector"
 import { useState } from "react"
 import { toast } from "sonner"
 import { TEXTS } from "@/lib/constants/texts"
 
-interface TaskFormProps {
-    householdId: string
+interface TaskEditFormProps {
+    task: any
     members: any[]
     onSuccess: () => void
+    onCancel: () => void
 }
 
-export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
+export function TaskEditForm({ task, members, onSuccess, onCancel }: TaskEditFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([])
-    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null)
+    const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(
+        task.assignees?.map((a: any) => a.memberId) || []
+    )
+    const [selectedEmoji, setSelectedEmoji] = useState<string | null>(task.emoji)
 
     const commonEmojis = ["🧹", "🍽️", "🧺", "🐶", "🐱", "🌱", "🚗", "🛒", "📚", "🎮"]
 
@@ -35,7 +38,7 @@ export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
         setIsSubmitting(true)
         const data = new FormData(e.currentTarget)
 
-        // Append participants
+        // Append assignees
         selectedMemberIds.forEach(id => data.append("assigneeIds", id))
 
         // Append emoji if selected
@@ -43,14 +46,10 @@ export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
             data.append("emoji", selectedEmoji)
         }
 
-        console.log("Submitting Task Form Data:", Object.fromEntries(data.entries()))
-        console.log("Assignee IDs:", selectedMemberIds)
-
-        const res = await createTask(householdId, data)
-        console.log("Server Response:", res)
+        const res = await updateTask(task.id, data)
 
         if (res?.success) {
-            toast.success("Tâche créée !")
+            toast.success("Tâche modifiée !")
             onSuccess()
         } else {
             toast.error(res?.error || TEXTS.errors.generic)
@@ -62,12 +61,12 @@ export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4 p-1">
             <div>
                 <label className="text-sm font-medium">Titre</label>
-                <Input name="title" placeholder="Ex: Sortir les poubelles" required />
+                <Input name="title" placeholder="Ex: Sortir les poubelles" defaultValue={task.title} required />
             </div>
 
             <div>
                 <label className="text-sm font-medium">Description (optionnel)</label>
-                <Textarea name="description" placeholder="Détails supplémentaires..." />
+                <Textarea name="description" placeholder="Détails supplémentaires..." defaultValue={task.description || ""} />
             </div>
 
             <div>
@@ -89,9 +88,13 @@ export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
                 </div>
             </div>
 
-            <div className="max-w-xs">
+            <div>
                 <label className="text-sm font-medium">Date limite (optionnel)</label>
-                <Input name="dueDate" type="date" />
+                <Input
+                    name="dueDate"
+                    type="date"
+                    defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""}
+                />
             </div>
 
             <div>
@@ -103,9 +106,14 @@ export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
                 />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? TEXTS.common.loading : "Créer la tâche"}
-            </Button>
+            <div className="flex gap-2">
+                <Button type="submit" className="flex-1" disabled={isSubmitting}>
+                    {isSubmitting ? TEXTS.common.loading : "Enregistrer"}
+                </Button>
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+                    Annuler
+                </Button>
+            </div>
         </form>
     )
 }

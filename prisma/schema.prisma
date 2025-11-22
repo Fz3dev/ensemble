@@ -122,6 +122,7 @@ model Task {
   id          String     @id @default(cuid())
   title       String
   description String?
+  emoji       String?    // Optional emoji for visual identification (🧹, 🍽️, 🧺, etc.)
   status      String     @default("TODO") // TaskStatus enum (kept as string for SQLite simplicity, but treated as enum in app)
   recurrence  String     @default("NONE") // TaskRecurrence enum
   dueDate     DateTime?

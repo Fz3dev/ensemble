@@ -25,6 +25,7 @@ export default async function DashboardLayout({
                             src="/logo.png?v=2"
                             alt="Logo"
                             fill
+                            sizes="40px"
                             className="object-contain object-left"
                             priority
                         />
@@ -33,7 +34,7 @@ export default async function DashboardLayout({
                 </div>
             </header>
 
-            <main className="flex-1 px-4">
+            <main className="flex-1 px-4 pt-8">
                 {children}
             </main>
 

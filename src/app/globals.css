@@ -126,6 +126,13 @@
   div {
     font-family: var(--font-cabin), sans-serif;
   }
+
+  /* Prevent iOS zoom on inputs by enforcing 16px font size */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 /* Custom Utilities */

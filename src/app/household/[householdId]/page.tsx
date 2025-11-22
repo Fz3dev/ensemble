@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { TEXTS } from "@/lib/constants/texts"
 import { DashboardEvents } from "@/components/dashboard-events"
+import { TaskCard } from "@/components/task-card"
 
 export default async function HouseholdPage({ params }: { params: { householdId: string } }) {
     const session = await auth()
@@ -43,6 +44,19 @@ export default async function HouseholdPage({ params }: { params: { householdId:
             householdId: params.householdId,
             status: "TODO"
         },
+        include: {
+            assignees: {
+                include: {
+                    member: {
+                        include: { user: true }
+                    }
+                }
+            }
+        },
+        orderBy: [
+            { dueDate: 'asc' },
+            { createdAt: 'desc' }
+        ],
         take: 3
     })
 
@@ -94,7 +108,7 @@ export default async function HouseholdPage({ params }: { params: { householdId:
                                 <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <CalendarDays className="w-6 h-6" />
                                 </div>
-                                <span className="font-semibold text-gray-900 dark:text-foreground">{TEXTS.navigation.calendar}</span>
+                                <span className="font-semibold text-foreground">{TEXTS.navigation.calendar}</span>
                             </CardContent>
                         </Card>
                     </Link>
@@ -106,7 +120,7 @@ export default async function HouseholdPage({ params }: { params: { householdId:
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                                     <CheckCircle2 className="w-6 h-6" />
                                 </div>
-                                <span className="font-semibold text-gray-900 dark:text-foreground">{TEXTS.navigation.tasks}</span>
+                                <span className="font-semibold text-foreground">{TEXTS.navigation.tasks}</span>
                             </CardContent>
                         </Card>
                     </Link>
@@ -117,7 +131,7 @@ export default async function HouseholdPage({ params }: { params: { householdId:
             <FadeIn delay={0.4}>
                 <div className="space-y-4">
                     <div className="flex items-center justify-between px-1">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-foreground">{TEXTS.dashboard.tasks}</h3>
+                        <h3 className="text-lg font-semibold text-foreground">{TEXTS.dashboard.tasks}</h3>
                         <Button variant="ghost" size="sm" className="text-primary" asChild>
                             <Link href={`/household/${params.householdId}/tasks`}>Voir tout</Link>
                         </Button>
@@ -126,12 +140,7 @@ export default async function HouseholdPage({ params }: { params: { householdId:
                     {tasks.length > 0 ? (
                         <div className="space-y-3">
                             {tasks.map((task: any) => (
-                                <Card key={task.id} className="border-none bg-white shadow-sm">
-                                    <CardContent className="p-4 flex items-center gap-3">
-                                        <div className="h-6 w-6 rounded-full border-2 border-muted-foreground/30" />
-                                        <span className="font-medium text-foreground">{task.title}</span>
-                                    </CardContent>
-                                </Card>
+                                <TaskCard key={task.id} task={task} />
                             ))}
                         </div>
                     ) : (

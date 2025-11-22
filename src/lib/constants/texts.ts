@@ -19,7 +19,7 @@ export const TEXTS = {
     },
     calendar: {
         title: "Planning",
-        addEvent: "Ajouter",
+        addEvent: "Nouvel événement",
         today: "Aujourd'hui",
         noEvents: "Rien de prévu ce jour-là.",
     },
