@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { Clock, Plus, CalendarDays, CheckCircle2 } from "lucide-react"
+import { Clock, Plus, CalendarDays, CheckCircle2, Lock } from "lucide-react"
 import { FadeIn, ScaleIn } from "@/components/animations"
 import { TEXTS } from "@/lib/constants/texts"
 import Link from "next/link"
@@ -128,9 +128,14 @@ export function DashboardEvents({ nextEvent, upcomingEvents, members, householdI
 
                         {nextEvent ? (
                             <div className="space-y-4">
-                                <h2 className="text-3xl sm:text-4xl font-bold leading-tight">
-                                    {nextEvent.title}
-                                </h2>
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-3xl sm:text-4xl font-bold leading-tight">
+                                        {nextEvent.title}
+                                    </h2>
+                                    {nextEvent.visibility === 'PARTICIPANTS' && (
+                                        <Lock className={`w-6 h-6 ${hasCustomBackground ? 'text-white/80' : 'text-muted-foreground'}`} />
+                                    )}
+                                </div>
                                 <div className="flex items-center space-x-4 text-lg opacity-90">
                                     <div className={`backdrop-blur-md px-4 py-2 rounded-xl ${hasCustomBackground ? 'bg-white/20' : 'bg-primary/10 text-primary font-semibold'}`}>
                                         {format(new Date(nextEvent.startTime), "HH:mm") === "00:00" && format(new Date(nextEvent.endTime), "HH:mm") === "23:59"
@@ -205,7 +210,12 @@ export function DashboardEvents({ nextEvent, upcomingEvents, members, householdI
                                                     </span>
                                                     <span className="text-xs text-muted-foreground">{format(new Date(event.startTime), "dd/MM")}</span>
                                                 </div>
-                                                <span className="font-medium text-gray-900 dark:text-foreground">{event.title}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-gray-900 dark:text-foreground">{event.title}</span>
+                                                    {event.visibility === 'PARTICIPANTS' && (
+                                                        <Lock className="w-3 h-3 text-muted-foreground/70" />
+                                                    )}
+                                                </div>
                                             </CardContent>
                                         </div>
                                     </div>

@@ -107,8 +107,8 @@ export function MemberCard({ member, onEdit, isAdmin, isCurrentUser }: MemberCar
                                 </div>
                             </div>
 
-                            {/* Actions for non-adults */}
-                            {canEdit && (
+                            {/* Actions */}
+                            {(isAdmin || canEdit) && (
                                 <div className="flex gap-1 flex-shrink-0">
                                     <Button
                                         variant="ghost"
@@ -116,7 +116,7 @@ export function MemberCard({ member, onEdit, isAdmin, isCurrentUser }: MemberCar
                                         className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
                                         onClick={() => onEdit?.(member)}
                                     >
-                                        <Edit className="w-4 h-4" />
+                                        <Edit className="w-4 w-4" />
                                     </Button>
                                     {/* Show delete only if not current user */}
                                     {!isCurrentUser && (

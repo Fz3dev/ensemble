@@ -162,6 +162,17 @@ export function EventForm({
                         />
                     </div>
 
+                    <div>
+                        <label className="text-sm font-medium">Description (optionnel)</label>
+                        <textarea
+                            name="description"
+                            placeholder="Ajoutez des détails sur l'événement..."
+                            defaultValue={data?.description || ""}
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            rows={3}
+                        />
+                    </div>
+
                     {mode === "create" ? (
                         <div className="grid grid-cols-1 gap-4">
                             <div>
@@ -171,18 +182,32 @@ export function EventForm({
                                     initialDates={data && data.startTime ? [new Date(data.startTime)] : []}
                                 />
                             </div>
-                            <div>
-                                <label className="text-sm font-medium">{TEXTS.event.category}</label>
-                                <Select name="category" defaultValue={data?.category || "OTHER"}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Catégorie" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">{TEXTS.event.category}</label>
+                                    <Select name="category" defaultValue={data?.category || "OTHER"}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Catégorie" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                                                <SelectItem key={key} value={key}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">Visibilité</label>
+                                    <Select name="visibility" defaultValue={data?.visibility || "HOUSEHOLD"}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Visibilité" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="HOUSEHOLD">Toute la famille</SelectItem>
+                                            <SelectItem value="PARTICIPANTS">Participants uniquement</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
                     ) : (
@@ -195,18 +220,32 @@ export function EventForm({
                                 />
                             </div>
 
-                            <div>
-                                <label className="text-sm font-medium">{TEXTS.event.category}</label>
-                                <Select name="category" defaultValue={data?.category || "OTHER"}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Catégorie" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
-                                            <SelectItem key={key} value={key}>{label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium">{TEXTS.event.category}</label>
+                                    <Select name="category" defaultValue={data?.category || "OTHER"}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Catégorie" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                                                <SelectItem key={key} value={key}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium">Visibilité</label>
+                                    <Select name="visibility" defaultValue={data?.visibility || "HOUSEHOLD"}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Visibilité" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="HOUSEHOLD">Toute la famille</SelectItem>
+                                            <SelectItem value="PARTICIPANTS">Participants uniquement</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </>
                     )}
@@ -231,6 +270,7 @@ export function EventForm({
                                 <Input
                                     name="startTime"
                                     type="time"
+                                    className="h-10"
                                     defaultValue={
                                         data?.startTime
                                             ? format(new Date(data.startTime), "HH:mm")
@@ -246,6 +286,7 @@ export function EventForm({
                                 <Input
                                     name="endTime"
                                     type="time"
+                                    className="h-10"
                                     defaultValue={
                                         data?.endTime
                                             ? format(new Date(data.endTime), "HH:mm")

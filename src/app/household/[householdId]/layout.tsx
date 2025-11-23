@@ -4,6 +4,8 @@ import Link from "next/link"
 import NextImage from "next/image"
 import { Calendar, CheckSquare, Home, Settings, Plus, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { NotificationBell } from "@/components/notification-bell"
+import { prisma } from "@/lib/prisma"
 
 export default async function DashboardLayout({
     children,
@@ -15,11 +17,24 @@ export default async function DashboardLayout({
     const session = await auth()
     if (!session) redirect("/login")
 
+    // Check if user still has a member in this household
+    const member = await prisma.member.findFirst({
+        where: {
+            householdId: params.householdId,
+            userId: session.user?.id
+        }
+    })
+
+    // If user was removed from this household, redirect to onboarding
+    if (!member) {
+        redirect("/onboarding/choice")
+    }
+
     return (
         <div className="flex min-h-screen flex-col bg-background pb-24">
             {/* Header Mobile - Minimalist */}
             <header className="sticky top-0 z-20 flex items-center justify-between bg-background/80 px-6 py-4 backdrop-blur-xl">
-                <div className="flex items-center gap-3">
+                <Link href={`/household/${params.householdId}`} className="flex items-center gap-3">
                     <div className="relative h-8 w-10">
                         <NextImage
                             src="/logo.png?v=2"
@@ -31,10 +46,11 @@ export default async function DashboardLayout({
                         />
                     </div>
                     <h1 className="text-xl font-bold tracking-tight text-primary font-serif">Ensemble</h1>
-                </div>
+                </Link>
+                <NotificationBell />
             </header>
 
-            <main className="flex-1 px-4 pt-8">
+            <main className="flex-1 px-4 pt-2">
                 {children}
             </main>
 

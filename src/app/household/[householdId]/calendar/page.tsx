@@ -22,19 +22,47 @@ export default async function CalendarPage({
     const selectedDate = searchParams.date ? new Date(searchParams.date) : new Date()
     const memberIds = searchParams.members?.split(",") || []
 
+    const currentMember = await prisma.member.findFirst({
+        where: {
+            householdId: params.householdId,
+            userId: session.user.id
+        }
+    })
+
     // Build where clause for events
     const whereClause: any = {
         householdId: params.householdId,
+        AND: [
+            {
+                OR: [
+                    { visibility: "HOUSEHOLD" },
+                    {
+                        AND: [
+                            { visibility: "PARTICIPANTS" },
+                            {
+                                participants: {
+                                    some: {
+                                        memberId: currentMember?.id
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
     }
 
     if (memberIds.length > 0) {
-        whereClause.participants = {
-            some: {
-                memberId: {
-                    in: memberIds
+        whereClause.AND.push({
+            participants: {
+                some: {
+                    memberId: {
+                        in: memberIds
+                    }
                 }
             }
-        }
+        })
     }
 
     const events = await prisma.event.findMany({

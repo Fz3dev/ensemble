@@ -2,9 +2,11 @@ import { z } from "zod"
 
 export const EventSchema = z.object({
     title: z.string().min(1, "Le titre est requis"),
+    description: z.string().optional(),
     startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Format invalide (HH:mm)"),
     endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Format invalide (HH:mm)"),
     category: z.enum(["CHORE", "APPOINTMENT", "ACTIVITY", "MEAL", "OTHER", "SCHOOL", "WORK", "HEALTH", "SPORT", "LEISURE"]),
+    visibility: z.enum(["HOUSEHOLD", "PARTICIPANTS"]).default("HOUSEHOLD"),
     participantIds: z.array(z.string()).optional(),
 })
 
@@ -38,6 +40,7 @@ export const TaskSchema = z.object({
     title: z.string().min(1, "Le titre est requis"),
     description: z.string().optional(),
     recurrence: z.enum(["NONE", "DAILY", "WEEKLY", "MONTHLY"]).default("NONE"),
+    visibility: z.enum(["HOUSEHOLD", "PARTICIPANTS"]).default("HOUSEHOLD"),
     dueDate: z.string().optional(), // ISO string
     assigneeIds: z.array(z.string()).optional(),
 })

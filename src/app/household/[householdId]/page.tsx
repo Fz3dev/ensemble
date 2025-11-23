@@ -10,15 +10,43 @@ import Link from "next/link"
 import { TEXTS } from "@/lib/constants/texts"
 import { DashboardEvents } from "@/components/dashboard-events"
 import { TaskCard } from "@/components/task-card"
+import { DashboardTaskList } from "@/components/dashboard-task-list"
 
 export default async function HouseholdPage({ params }: { params: { householdId: string } }) {
     const session = await auth()
     if (!session?.user) return null
 
+    const members = await prisma.member.findMany({
+        where: { householdId: params.householdId },
+        include: { user: true }
+    })
+
+    // Get current user's member for avatar color and filtering
+    const currentUserMember = members.find(m => m.userId === session.user?.id)
+
     const nextEvents = await prisma.event.findMany({
         where: {
             householdId: params.householdId,
-            startTime: { gte: new Date() }
+            startTime: { gte: new Date() },
+            AND: [
+                {
+                    OR: [
+                        { visibility: "HOUSEHOLD" },
+                        {
+                            AND: [
+                                { visibility: "PARTICIPANTS" },
+                                {
+                                    participants: {
+                                        some: {
+                                            memberId: currentUserMember?.id
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         },
         orderBy: { startTime: 'asc' },
         take: 3,
@@ -31,18 +59,23 @@ export default async function HouseholdPage({ params }: { params: { householdId:
     const nextEvent = nextEvents[0]
     const upcomingEvents = nextEvents.slice(1)
 
-    const members = await prisma.member.findMany({
-        where: { householdId: params.householdId },
-        include: { user: true }
-    })
 
-    // Get current user's member for avatar color
-    const currentUserMember = members.find(m => m.userId === session.user.id)
 
     const tasks = await prisma.task.findMany({
         where: {
             householdId: params.householdId,
-            status: "TODO"
+            status: "TODO",
+            OR: [
+                { visibility: "HOUSEHOLD" },
+                {
+                    visibility: "PARTICIPANTS",
+                    assignees: {
+                        some: {
+                            memberId: currentUserMember?.id
+                        }
+                    }
+                }
+            ]
         },
         include: {
             assignees: {
@@ -137,19 +170,7 @@ export default async function HouseholdPage({ params }: { params: { householdId:
                         </Button>
                     </div>
 
-                    {tasks.length > 0 ? (
-                        <div className="space-y-3">
-                            {tasks.map((task: any) => (
-                                <TaskCard key={task.id} task={task} />
-                            ))}
-                        </div>
-                    ) : (
-                        <Card className="border-dashed shadow-none bg-gray-50/50">
-                            <CardContent className="p-8 text-center text-muted-foreground">
-                                <p>{TEXTS.dashboard.noTasks}</p>
-                            </CardContent>
-                        </Card>
-                    )}
+                    <DashboardTaskList tasks={tasks} members={members} />
                 </div>
             </FadeIn>
         </div>

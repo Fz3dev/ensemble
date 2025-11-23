@@ -165,10 +165,31 @@ export async function joinHousehold(formData: FormData) {
       }
     })
 
+    await notifyAdminsOfJoinRequest(household.id, session.user.name || "Utilisateur")
+
     return { success: true, pending: true }
   } catch (error) {
     console.error(error)
     return { success: false, error: "Erreur lors de la demande" }
+  }
+}
+
+// Helper to notify admins
+async function notifyAdminsOfJoinRequest(householdId: string, userName: string) {
+  const admins = await prisma.member.findMany({
+    where: { householdId, role: "ADMIN", userId: { not: null } }
+  })
+
+  for (const admin of admins) {
+    if (admin.userId) {
+      await createNotification({
+        userId: admin.userId,
+        householdId,
+        type: "JOIN_REQUEST",
+        title: "Nouvelle demande d'adhésion",
+        message: `${userName || "Un utilisateur"} souhaite rejoindre votre famille.`
+      })
+    }
   }
 }
 
@@ -215,6 +236,16 @@ export async function approveJoinRequest(requestId: string) {
         data: { status: "APPROVED" }
       })
     ])
+
+    // Notify User
+    await createNotification({
+      userId: request.userId,
+      householdId: request.householdId,
+      type: "JOIN_ACCEPTED",
+      title: "Demande acceptée !",
+      message: `Bienvenue dans la famille ${request.household.name} !`,
+      resourceId: request.householdId
+    })
 
     revalidatePath(`/household/${request.householdId}`)
     return { success: true }
@@ -311,6 +342,23 @@ export async function addMember(householdId: string, formData: FormData) {
       }
     })
 
+    // Notify all other users in the household
+    const usersToNotify = await prisma.member.findMany({
+      where: { householdId, userId: { not: null } }
+    })
+
+    for (const member of usersToNotify) {
+      if (member.userId && member.userId !== session.user.id) {
+        await createNotification({
+          userId: member.userId,
+          householdId,
+          type: "MEMBER_ADDED",
+          title: "Nouveau membre ajouté",
+          message: `${session.user.name} a ajouté ${type === "CHILD" ? "un enfant" : "un animal"} : ${name}`
+        })
+      }
+    }
+
     revalidatePath(`/household/${householdId}`)
     return { success: true }
   } catch (error) {
@@ -343,23 +391,40 @@ export async function updateMember(memberId: string, formData: FormData) {
     const member = await prisma.member.findUnique({ where: { id: memberId } })
     if (!member) return { error: "Member not found" }
 
-    // If member has a userId (adult), only allow updating nickname and color
+    // Check if current user is admin
+    const currentUserMember = await prisma.member.findFirst({
+      where: {
+        householdId: member.householdId,
+        userId: session.user.id
+      }
+    })
+    const isAdmin = currentUserMember?.role === "ADMIN"
+
+    // If member has a userId (adult)
     if (member.userId) {
-      // Can only update own profile
-      if (member.userId !== session.user.id) {
+      // Admins can edit anyone's color, or user can edit own profile
+      if (!isAdmin && member.userId !== session.user.id) {
         return { error: "Cannot edit other adult members" }
       }
 
-      // Only update nickname and color for adults
-      await prisma.member.update({
-        where: { id: memberId },
-        data: {
-          nickname: name,
-          color,
-        }
-      })
+      // Admins can only update color for other adults
+      // Users can update their own nickname and color
+      if (isAdmin && member.userId !== session.user.id) {
+        await prisma.member.update({
+          where: { id: memberId },
+          data: { color }
+        })
+      } else {
+        await prisma.member.update({
+          where: { id: memberId },
+          data: {
+            nickname: name,
+            color,
+          }
+        })
+      }
     } else {
-      // For children/pets, allow all updates
+      // For children/pets, allow all updates (admins or anyone)
       await prisma.member.update({
         where: { id: memberId },
         data: {
@@ -386,8 +451,24 @@ export async function deleteMember(memberId: string) {
     const member = await prisma.member.findUnique({ where: { id: memberId } })
     if (!member) return { error: "Member not found" }
 
-    // Only allow deleting children/pets (not adult members with user accounts)
-    if (member.userId) return { error: "Cannot delete adult members" }
+    // Check if current user is admin
+    const currentUserMember = await prisma.member.findFirst({
+      where: {
+        householdId: member.householdId,
+        userId: session.user.id
+      }
+    })
+    const isAdmin = currentUserMember?.role === "ADMIN"
+
+    // Prevent self-deletion
+    if (member.userId === session.user.id) {
+      return { error: "Cannot delete your own account" }
+    }
+
+    // Only admins can delete adult members with user accounts
+    if (member.userId && !isAdmin) {
+      return { error: "Cannot delete adult members" }
+    }
 
     await prisma.member.delete({ where: { id: memberId } })
 
@@ -408,10 +489,12 @@ export async function createEvent(householdId: string, formData: FormData) {
   // Parse FormData to Object
   const rawData = {
     title: formData.get("title"),
+    description: formData.get("description"),
     dates: formData.get("dates"),
     startTime: formData.get("startTime"),
     endTime: formData.get("endTime"),
     category: formData.get("category"),
+    visibility: formData.get("visibility"),
     participantIds: formData.getAll("participantIds"),
   }
 
@@ -423,7 +506,7 @@ export async function createEvent(householdId: string, formData: FormData) {
     return { error: "Données invalides" }
   }
 
-  const { title, dates, startTime, endTime, category, participantIds } = validatedFields.data
+  const { title, description, dates, startTime, endTime, category, visibility, participantIds } = validatedFields.data
 
   try {
     // Create a series if there are multiple dates
@@ -441,9 +524,11 @@ export async function createEvent(householdId: string, formData: FormData) {
 
       return {
         title,
+        description,
         startTime: startDateTime,
         endTime: endDateTime,
         category,
+        visibility,
         householdId,
         seriesId,
         // Participants are handled separately or via nested create if supported
@@ -465,6 +550,23 @@ export async function createEvent(householdId: string, formData: FormData) {
             memberId
           }))
         })
+
+        // Notify Participants
+        const members = await prisma.member.findMany({
+          where: { id: { in: participantIds }, userId: { not: null } }
+        })
+
+        for (const member of members) {
+          if (member.userId && member.userId !== session.user?.id) {
+            await createNotification({
+              userId: member.userId,
+              householdId,
+              type: "EVENT_INVITE",
+              title: "Invitation à un événement",
+              message: `${session.user?.name || "Un membre"} vous a ajouté à l'événement "${title}"`,
+            })
+          }
+        }
       }
     }))
 
@@ -481,8 +583,24 @@ export async function deleteEvent(eventId: string, deleteSeries: boolean = false
   if (!session?.user?.id) return { error: "Not authenticated" }
 
   try {
-    const event = await prisma.event.findUnique({ where: { id: eventId } })
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { participants: { include: { member: true } } }
+    })
     if (!event) return { error: "Event not found" }
+
+    // Notify participants before deletion
+    for (const p of event.participants) {
+      if (p.member.userId && p.member.userId !== session.user.id) {
+        await createNotification({
+          userId: p.member.userId,
+          householdId: event.householdId,
+          type: "EVENT_DELETED",
+          title: "Événement annulé",
+          message: `L'événement "${event.title}" a été supprimé par ${session.user.name || "un membre"}.`,
+        })
+      }
+    }
 
     if (deleteSeries && event.seriesId) {
       await prisma.event.deleteMany({ where: { seriesId: event.seriesId } })
@@ -505,10 +623,12 @@ export async function updateEvent(eventId: string, formData: FormData, updateSer
 
   const rawData = {
     title: formData.get("title"),
+    description: formData.get("description"),
     date: formData.get("date"), // Get the new date from form
     startTime: formData.get("startTime"),
     endTime: formData.get("endTime"),
     category: formData.get("category"),
+    visibility: formData.get("visibility"),
     participantIds: formData.getAll("participantIds"),
   }
 
@@ -519,15 +639,20 @@ export async function updateEvent(eventId: string, formData: FormData, updateSer
     return { error: "Données invalides" }
   }
 
-  const { title, date, startTime, endTime, category, participantIds } = validatedFields.data
+  const { title, description, date, startTime, endTime, category, visibility, participantIds } = validatedFields.data
 
   try {
-    const event = await prisma.event.findUnique({ where: { id: eventId } })
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { participants: { include: { member: true } } }
+    })
     if (!event) return { error: "Event not found" }
 
     const dataToUpdate: any = {}
     if (title) dataToUpdate.title = title
+    if (description !== undefined) dataToUpdate.description = description
     if (category) dataToUpdate.category = category
+    if (visibility) dataToUpdate.visibility = visibility
 
     // Helper to update participants
     const updateParticipants = async (targetEventId: string) => {
@@ -598,12 +723,31 @@ export async function updateEvent(eventId: string, formData: FormData, updateSer
         dataToUpdate.endTime = new Date(`${newDate}T${format(event.endTime, 'HH:mm')}`)
       }
 
-      await prisma.event.update({
+      const updatedEvent = await prisma.event.update({
         where: { id: eventId },
         data: dataToUpdate
       })
 
       await updateParticipants(eventId)
+
+      // Notify participants if time/date changed
+      if (startTime || endTime || date) {
+        const oldStart = format(event.startTime, "dd/MM/yyyy à HH:mm")
+        const newStart = format(updatedEvent.startTime, "dd/MM/yyyy à HH:mm")
+
+        for (const p of event.participants) {
+          if (p.member.userId && p.member.userId !== session.user.id) {
+            await createNotification({
+              userId: p.member.userId,
+              householdId: event.householdId,
+              type: "EVENT_UPDATED",
+              title: "Événement modifié",
+              message: `L'événement "${event.title}" a été déplacé du ${oldStart} au ${newStart}.`,
+              resourceId: event.id
+            })
+          }
+        }
+      }
     }
 
     revalidatePath(`/household/${event.householdId}`)
@@ -632,6 +776,7 @@ export async function createTask(householdId: string, formData: FormData) {
     title: formData.get("title"),
     description: formData.get("description"),
     recurrence: formData.get("recurrence") || undefined,
+    visibility: formData.get("visibility") || undefined,
     dueDate: formData.get("dueDate") || undefined,
     assigneeIds: formData.getAll("assigneeIds"),
   }
@@ -644,9 +789,9 @@ export async function createTask(householdId: string, formData: FormData) {
     return { error: "Données invalides: " + JSON.stringify(validatedFields.error.flatten().fieldErrors) }
   }
 
-  const { title, description, recurrence, dueDate, assigneeIds } = validatedFields.data
+  const { title, description, recurrence, visibility, dueDate, assigneeIds } = validatedFields.data
   const emoji = formData.get("emoji") as string | null
-  console.log("Validated Data:", { title, description, recurrence, dueDate, assigneeIds, emoji })
+  console.log("Validated Data:", { title, description, recurrence, visibility, dueDate, assigneeIds, emoji })
 
   try {
     console.log("Attempting Prisma Create...")
@@ -656,6 +801,7 @@ export async function createTask(householdId: string, formData: FormData) {
         description,
         emoji,
         recurrence: recurrence as any, // Ensure this matches your Prisma schema type (String or Enum)
+        visibility: visibility as any,
         dueDate: dueDate ? new Date(dueDate) : null,
         householdId,
         status: "TODO",
@@ -672,6 +818,24 @@ export async function createTask(householdId: string, formData: FormData) {
         }))
       })
       console.log("Members assigned.")
+
+      // Notify Assignees
+      const members = await prisma.member.findMany({
+        where: { id: { in: assigneeIds }, userId: { not: null } }
+      })
+
+      for (const member of members) {
+        if (member.userId && member.userId !== session.user.id) {
+          await createNotification({
+            userId: member.userId,
+            householdId,
+            type: "TASK_ASSIGNED",
+            title: "Nouvelle tâche assignée",
+            message: `${session.user.name} vous a assigné la tâche "${title}"`,
+            resourceId: task.id
+          })
+        }
+      }
     }
 
     revalidatePath(`/household/${householdId}/tasks`)
@@ -725,6 +889,26 @@ export async function toggleTask(taskId: string, currentStatus: string) {
       })
     }
 
+    // Notify Household Members if task completed
+    if (newStatus === "DONE") {
+      const members = await prisma.member.findMany({
+        where: { householdId: task.householdId, userId: { not: null } }
+      })
+
+      for (const member of members) {
+        if (member.userId && member.userId !== session.user.id) {
+          await createNotification({
+            userId: member.userId,
+            householdId: task.householdId,
+            type: "TASK_COMPLETED",
+            title: "Tâche terminée",
+            message: `${session.user.name} a terminé la tâche "${task.title}"`,
+            resourceId: task.id
+          })
+        }
+      }
+    }
+
     revalidatePath("/")
     return { success: true }
   } catch (error) {
@@ -762,6 +946,7 @@ export async function updateTask(taskId: string, formData: FormData) {
     const description = formData.get("description") as string | null
     const emoji = formData.get("emoji") as string | null
     const recurrence = formData.get("recurrence") as string
+    const visibility = formData.get("visibility") as string
     const dueDate = formData.get("dueDate") as string | null
     const assigneeIds = formData.getAll("assigneeIds") as string[]
 
@@ -772,6 +957,7 @@ export async function updateTask(taskId: string, formData: FormData) {
         description,
         emoji,
         recurrence: recurrence as any,
+        visibility: visibility as any,
         dueDate: dueDate ? new Date(dueDate) : null,
       }
     })
@@ -787,10 +973,104 @@ export async function updateTask(taskId: string, formData: FormData) {
       })
     }
 
+    // Notify if due date changed
+    const oldDueDate = task.dueDate
+    const newDueDateObj = dueDate ? new Date(dueDate) : null
+
+    if (oldDueDate?.getTime() !== newDueDateObj?.getTime()) {
+      const assignees = await prisma.taskAssignee.findMany({
+        where: { taskId },
+        include: { member: true }
+      })
+
+      const formattedDate = newDueDateObj ? format(newDueDateObj, "dd/MM/yyyy") : "aucune date"
+
+      for (const assignee of assignees) {
+        if (assignee.member.userId && assignee.member.userId !== session.user.id) {
+          await createNotification({
+            userId: assignee.member.userId,
+            householdId: task.householdId,
+            type: "TASK_UPDATED",
+            title: "Tâche modifiée",
+            message: `La date de la tâche "${title}" a été modifiée pour le ${formattedDate}.`,
+            resourceId: task.id
+          })
+        }
+      }
+    }
+
     revalidatePath(`/household/${task.householdId}`)
     return { success: true }
   } catch (error) {
     console.error(error)
     return { error: "Failed to update task" }
+  }
+}
+
+
+// --- Notification Actions ---
+
+export async function getNotifications() {
+  const session = await auth()
+  if (!session?.user?.id) return []
+
+  try {
+    const notifications = await prisma.notification.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20
+    })
+    return notifications
+  } catch (error) {
+    console.error("Failed to fetch notifications", error)
+    return []
+  }
+}
+
+export async function markNotificationAsRead(notificationId: string) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "Not authenticated" }
+
+  try {
+    await prisma.notification.update({
+      where: { id: notificationId },
+      data: { read: true }
+    })
+    revalidatePath("/")
+    return { success: true }
+  } catch (error) {
+    return { error: "Failed to mark as read" }
+  }
+}
+
+export async function markAllNotificationsAsRead() {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "Not authenticated" }
+
+  try {
+    await prisma.notification.updateMany({
+      where: { userId: session.user.id, read: false },
+      data: { read: true }
+    })
+    revalidatePath("/")
+    return { success: true }
+  } catch (error) {
+    return { error: "Failed to mark all as read" }
+  }
+}
+
+// Helper to create notifications
+async function createNotification(data: {
+  userId: string
+  householdId: string
+  type: string
+  title: string
+  message: string
+  resourceId?: string
+}) {
+  try {
+    await prisma.notification.create({ data })
+  } catch (error) {
+    console.error("Failed to create notification", error)
   }
 }

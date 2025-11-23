@@ -5,122 +5,118 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Member Type Labels
-export const MEMBER_TYPE_LABELS = {
-  ADULT: "Adulte",
-  CHILD: "Enfant",
-  PET: "Animal"
+export const MEMBER_COLORS = [
+  { name: "Bleu Ciel", value: "#38bdf8" },
+  { name: "Vert Menthe", value: "#4ade80" },
+  { name: "Rose Bonbon", value: "#f472b6" },
+  { name: "Jaune Soleil", value: "#facc15" },
+  { name: "Orange Corail", value: "#fb923c" },
+  { name: "Violet Lavande", value: "#a78bfa" },
+  { name: "Rouge Cerise", value: "#f87171" },
+  { name: "Gris Perle", value: "#94a3b8" },
+]
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  CHORES: "Tâches ménagères",
+  APPOINTMENT: "Rendez-vous",
+  SCHOOL: "École",
+  ACTIVITY: "Activité",
+  MEAL: "Repas",
+  OTHER: "Autre",
+  WORK: "Travail",
+  SHOPPING: "Courses",
+  HEALTH: "Santé",
+  FINANCE: "Finance",
+  TRAVEL: "Voyage",
+  SOCIAL: "Social",
+  EDUCATION: "Éducation",
 }
 
-// Pet Type Labels
-export const PET_TYPE_LABELS = {
+export const PET_TYPE_LABELS: Record<string, string> = {
   DOG: "Chien",
   CAT: "Chat",
   BIRD: "Oiseau",
-  OTHER: "Autre"
+  FISH: "Poisson",
+  RODENT: "Rongeur",
+  REPTILE: "Reptile",
+  OTHER: "Autre",
 }
 
-// Event Category Labels
-export const CATEGORY_LABELS = {
-  WORK: "Travail",
-  PERSONAL: "Personnel",
-  FAMILY: "Famille",
-  HEALTH: "Santé",
-  EDUCATION: "Éducation",
-
-  LEISURE: "Loisirs",
-  OTHER: "Autre"
+export const MEMBER_TYPE_LABELS: Record<string, string> = {
+  ADULT: "Adulte",
+  CHILD: "Enfant",
+  PET: "Animal",
+  OTHER: "Autre",
 }
 
-// Get category color
-export function getCategoryColor(category: string): string {
-  const colors: Record<string, string> = {
-    WORK: "#3b82f6",
-    PERSONAL: "#8b5cf6",
-    FAMILY: "#ec4899",
-    HEALTH: "#10b981",
-    EDUCATION: "#f59e0b",
-    LEISURE: "#06b6d4",
-    OTHER: "#6b7280"
-  }
-  return colors[category] || colors.OTHER
-}
-
-// Task Recurrence Labels
-export const TASK_RECURRENCE_LABELS = {
+export const TASK_RECURRENCE_LABELS: Record<string, string> = {
   NONE: "Aucune",
-  DAILY: "Quotidien",
+  DAILY: "Quotidienne",
   WEEKLY: "Hebdomadaire",
-  MONTHLY: "Mensuel"
+  MONTHLY: "Mensuelle",
 }
 
-// Member Colors Palette
-export const MEMBER_COLORS = [
-  { value: "#7EB5E8", label: "Bleu Ciel" },        // HSL(210°, 60%, 70%) - Bleu vibrant
-  { value: "#7DD4A8", label: "Vert Menthe" },      // HSL(155°, 55%, 68%) - Vert frais
-  { value: "#F5D06C", label: "Jaune Soleil" },     // HSL(45°, 65%, 70%) - Jaune vif
-  { value: "#F09A8F", label: "Corail" },           // HSL(10°, 70%, 75%) - Corail chaud
-  { value: "#E89FCE", label: "Rose Bonbon" },      // HSL(320°, 58%, 75%) - Rose doux
-  { value: "#B5A4E8", label: "Lavande" },          // HSL(250°, 60%, 75%) - Violet clair
-  { value: "#78D4D0", label: "Turquoise" },        // HSL(175°, 50%, 68%) - Cyan pastel
-  { value: "#F5B98F", label: "Pêche" },            // HSL(25°, 65%, 75%) - Orange doux
-]
+export function generateGoogleCalendarLink(event: {
+  title: string
+  startTime: Date
+  endTime: Date
+  description?: string | null
+  location?: string | null
+}) {
+  const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g, "")
 
-// Calendar Export Helpers
-export function generateGoogleCalendarLink(event: { title: string, description?: string, startTime: Date | string, endTime: Date | string, location?: string }) {
-  const start = new Date(event.startTime).toISOString().replace(/-|:|\.\d+/g, "")
-  const end = new Date(event.endTime).toISOString().replace(/-|:|\.\d+/g, "")
+  const url = new URL("https://calendar.google.com/calendar/render")
+  url.searchParams.append("action", "TEMPLATE")
+  url.searchParams.append("text", event.title)
+  url.searchParams.append("dates", `${formatDate(event.startTime)}/${formatDate(event.endTime)}`)
 
-  const params = new URLSearchParams({
-    action: "TEMPLATE",
-    text: event.title,
-    dates: `${start}/${end}`,
-    details: event.description || "",
-    location: event.location || "",
-  })
+  if (event.description) {
+    url.searchParams.append("details", event.description)
+  }
 
-  return `https://calendar.google.com/calendar/render?${params.toString()}`
+  if (event.location) {
+    url.searchParams.append("location", event.location)
+  }
+
+  return url.toString()
 }
 
-export function generateICSFile(event: { title: string, description?: string, startTime: Date | string, endTime: Date | string, location?: string }) {
-  const start = new Date(event.startTime).toISOString().replace(/-|:|\.\d+/g, "")
-  const end = new Date(event.endTime).toISOString().replace(/-|:|\.\d+/g, "")
+export function generateICSFile(event: {
+  title: string
+  startTime: Date
+  endTime: Date
+  description?: string | null
+  location?: string | null
+}) {
+  const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g, "")
 
-  const icsContent = [
+  const content = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Ensemble//App//FR",
     "BEGIN:VEVENT",
-    `DTSTART:${start}`,
-    `DTEND:${end}`,
+    `DTSTART:${formatDate(event.startTime)}`,
+    `DTEND:${formatDate(event.endTime)}`,
     `SUMMARY:${event.title}`,
-    `DESCRIPTION:${event.description || ""}`,
-    `LOCATION:${event.location || ""}`,
+    event.description ? `DESCRIPTION:${event.description}` : "",
+    event.location ? `LOCATION:${event.location}` : "",
     "END:VEVENT",
-    "END:VCALENDAR"
-  ].join("\n")
+    "END:VCALENDAR",
+  ]
+    .filter(Boolean)
+    .join("\n")
 
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" })
+  const blob = new Blob([content], { type: "text/calendar;charset=utf-8" })
   return URL.createObjectURL(blob)
 }
 
-// Robust Copy to Clipboard (works in non-secure contexts)
 export async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    // Try modern API first
-    if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text)
-      return true
-    } else {
-      throw new Error("Clipboard API unavailable")
-    }
-  } catch (err) {
-    // Fallback for non-secure contexts (e.g. local dev via IP)
+  if (!navigator.clipboard) {
+    // Fallback for non-secure contexts or older browsers
     try {
       const textArea = document.createElement("textarea")
       textArea.value = text
 
-      // Ensure it's not visible but part of DOM
+      // Ensure it's not visible but part of the DOM
       textArea.style.position = "fixed"
       textArea.style.left = "-9999px"
       textArea.style.top = "0"
@@ -131,11 +127,19 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
       const successful = document.execCommand('copy')
       document.body.removeChild(textArea)
-
       return successful
-    } catch (fallbackErr) {
-      console.error("Copy failed:", fallbackErr)
+    } catch (err) {
+      console.error('Fallback: Oops, unable to copy', err)
       return false
     }
+  }
+
+  // Modern API
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (err) {
+    console.error('Async: Could not copy text: ', err)
+    return false
   }
 }

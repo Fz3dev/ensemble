@@ -5,9 +5,9 @@ import { format } from "date-fns"
 import { Card, CardContent } from "@/components/ui/card"
 import { EventDetailsDrawer } from "@/components/event-details-drawer"
 import { FadeIn } from "@/components/animations"
-import { Clock } from "lucide-react"
+import { Clock, Lock } from "lucide-react"
 import { TEXTS } from "@/lib/constants/texts"
-import { getCategoryColor } from "@/lib/utils"
+import { CATEGORY_LABELS } from "@/lib/utils"
 import { SwipeableEventCard } from "@/components/swipeable-event-card"
 import { deleteEvent } from "@/server/actions"
 import { toast } from "sonner"
@@ -112,7 +112,12 @@ export function EventList({ events, members }: EventListProps) {
                                         <div className="h-full w-full bg-white rounded-r-[11px] rounded-l-[6px] group-hover:bg-gray-50 transition-colors">
                                             <CardContent className="p-4 flex items-center justify-between h-full">
                                                 <div>
-                                                    <h4 className="font-medium">{event.title}</h4>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-medium">{event.title}</h4>
+                                                        {event.visibility === 'PARTICIPANTS' && (
+                                                            <Lock className="w-3 h-3 text-muted-foreground/70" />
+                                                        )}
+                                                    </div>
                                                     <div className="flex items-center text-sm text-muted-foreground mt-1">
                                                         <Clock className="w-3 h-3 mr-1" />
                                                         {format(new Date(event.startTime), "HH:mm") === "00:00" && format(new Date(event.endTime), "HH:mm") === "23:59"
@@ -125,11 +130,11 @@ export function EventList({ events, members }: EventListProps) {
                                         </div>
                                     </div>
                                 </SwipeableEventCard>
-                            </FadeIn>
+                            </FadeIn >
                         )
                     })
                 )}
-            </div>
+            </div >
 
             <EventDetailsDrawer
                 event={selectedEvent}

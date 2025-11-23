@@ -39,7 +39,7 @@ export function MembersClient({ householdId, members, currentUserId, isAdmin }: 
 
     return (
         <>
-            <div className="space-y-8 py-6">
+            <div className="space-y-8 py-2">
                 {/* Header */}
                 <FadeIn>
                     <div className="flex items-center gap-3 mb-6">
@@ -73,12 +73,12 @@ export function MembersClient({ householdId, members, currentUserId, isAdmin }: 
                                         member={member}
                                         isAdmin={isAdmin}
                                         isCurrentUser={member.userId === currentUserId}
-                                        onEdit={member.userId === currentUserId ? handleEditMember : undefined}
+                                        onEdit={handleEditMember}
                                     />
                                 ))}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-muted-foreground italic px-2">
-                                💡 Les adultes sont gérés via le système d'invitations
+                            <p className="text-sm text-muted-foreground italic px-2">
+                                💡 Les adultes sont gérés via le système d"invitations
                             </p>
                         </div>
                     </FadeIn>
@@ -181,10 +181,13 @@ export function MembersClient({ householdId, members, currentUserId, isAdmin }: 
             <MemberDetailsDrawer
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
+                onClose={() => setDialogOpen(false)}
                 householdId={householdId}
                 member={editingMember}
                 memberType={dialogType}
                 userName={editingMember?.user?.name}
+                isAdmin={isAdmin}
+                currentUserId={currentUserId}
             />
         </>
     )

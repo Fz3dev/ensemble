@@ -1,10 +1,11 @@
-import { auth } from "@/auth"
+import { auth, signOut } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import NextImage from "next/image"
-import { Home, UserPlus } from "lucide-react"
+import { Home, UserPlus, LogOut } from "lucide-react"
 import { FadeIn, SlideIn } from "@/components/animations"
+import { Button } from "@/components/ui/button"
 
 export default async function OnboardingChoice() {
     const session = await auth()
@@ -74,7 +75,7 @@ export default async function OnboardingChoice() {
                             <div className="flex-1">
                                 <h2 className="text-xl font-bold text-foreground mb-1">Rejoindre une famille</h2>
                                 <p className="text-muted-foreground text-sm">
-                                    J'ai reçu un code d'invitation
+                                    J"ai reçu un code d"invitation
                                 </p>
                             </div>
                         </div>
@@ -84,6 +85,22 @@ export default async function OnboardingChoice() {
 
             <SlideIn delay={0.3} direction="up" className="mt-8 text-center text-sm text-gray-500">
                 <p>Vous devez créer ou rejoindre une famille pour continuer</p>
+            </SlideIn>
+
+            <SlideIn delay={0.4} direction="up" className="mt-6">
+                <form action={async () => {
+                    "use server"
+                    await signOut({ redirectTo: "/login" })
+                }}>
+                    <Button
+                        type="submit"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-foreground"
+                    >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Se déconnecter
+                    </Button>
+                </form>
             </SlideIn>
         </div>
     )

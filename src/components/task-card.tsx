@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { CheckCircle2, Circle, Repeat } from "lucide-react"
+import { CheckCircle2, Circle, Repeat, Lock } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toggleTask } from "@/server/actions"
 import { useState } from "react"
@@ -19,7 +19,8 @@ export function TaskCard({ task }: TaskCardProps) {
     const [isCompleted, setIsCompleted] = useState(task.status === "DONE")
     const [isLoading, setIsLoading] = useState(false)
 
-    const handleToggle = async () => {
+    const handleToggle = async (e: React.MouseEvent) => {
+        e.stopPropagation()
         if (isLoading) return
         setIsLoading(true)
 
@@ -74,6 +75,9 @@ export function TaskCard({ task }: TaskCardProps) {
                         isCompleted ? "text-muted-foreground line-through" : "text-gray-900 dark:text-foreground"
                     )}>
                         {task.title}
+                        {task.visibility === "PARTICIPANTS" && (
+                            <Lock className="inline-block ml-2 h-3 w-3 text-muted-foreground" />
+                        )}
                     </h4>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                         {task.dueDate && (

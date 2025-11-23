@@ -23,6 +23,7 @@ model User {
 
   memberships   Member[]
   joinRequests  JoinRequest[]
+  notifications Notification[]
 }
 
 model Household {
@@ -36,6 +37,7 @@ model Household {
   events       Event[]
   tasks        Task[]
   joinRequests JoinRequest[]
+  notifications Notification[]
 }
 
 model Member {
@@ -85,6 +87,7 @@ model Event {
   startTime   DateTime
   endTime     DateTime
   category    String        @default("OTHER") // EventCategory enum
+  visibility  String        @default("HOUSEHOLD") // HOUSEHOLD, PARTICIPANTS
   isAllDay    Boolean       @default(false)
   location    String?
   
@@ -125,6 +128,7 @@ model Task {
   emoji       String?    // Optional emoji for visual identification (🧹, 🍽️, 🧺, etc.)
   status      String     @default("TODO") // TaskStatus enum (kept as string for SQLite simplicity, but treated as enum in app)
   recurrence  String     @default("NONE") // TaskRecurrence enum
+  visibility  String     @default("HOUSEHOLD") // HOUSEHOLD, PARTICIPANTS
   dueDate     DateTime?
   
   householdId String
@@ -147,4 +151,21 @@ model TaskAssignee {
   member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@id([taskId, memberId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  type        String   // JOIN_REQUEST, JOIN_ACCEPTED, TASK_ASSIGNED, EVENT_INVITE
+  title       String
+  message     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  householdId String
+  household   Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  resourceId  String?  // Optional link to the related resource (taskId, eventId, etc.)
 }

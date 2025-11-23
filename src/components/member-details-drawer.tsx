@@ -15,10 +15,13 @@ import { Member } from "@prisma/client"
 interface MemberDetailsDrawerProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    onClose: () => void
     householdId: string
     member?: Member // If editing
     memberType: "CHILD" | "PET" | "ADULT"
     userName?: string | null // For adults: fallback if no nickname
+    isAdmin?: boolean
+    currentUserId?: string
 }
 
 export function MemberDetailsDrawer({ open, onOpenChange, householdId, member, memberType, userName }: MemberDetailsDrawerProps) {
@@ -161,7 +164,7 @@ export function MemberDetailsDrawer({ open, onOpenChange, householdId, member, m
                                                 : "border-gray-200 hover:border-primary/50"
                                                 }`}
                                             style={{ backgroundColor: c.value }}
-                                            title={c.label}
+                                            title={c.name}
                                         />
                                     ))}
                                 </div>

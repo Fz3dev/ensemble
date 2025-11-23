@@ -34,6 +34,21 @@ export default async function TasksPage({
         }
     }
 
+    // Visibility Filter
+    whereClause.OR = [
+        { visibility: "HOUSEHOLD" },
+        {
+            visibility: "PARTICIPANTS",
+            assignees: {
+                some: {
+                    member: {
+                        userId: session.user.id
+                    }
+                }
+            }
+        }
+    ]
+
     const tasks = await prisma.task.findMany({
         where: whereClause,
         include: {

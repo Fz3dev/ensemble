@@ -88,13 +88,29 @@ export function TaskEditForm({ task, members, onSuccess, onCancel }: TaskEditFor
                 </div>
             </div>
 
-            <div>
+            <div className="max-w-xs">
                 <label className="text-sm font-medium">Date limite (optionnel)</label>
                 <Input
                     name="dueDate"
                     type="date"
                     defaultValue={task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : ""}
                 />
+            </div>
+
+            <div>
+                <label className="text-sm font-medium mb-1 block">Visibilité</label>
+                <Select name="visibility" defaultValue={task.visibility || "HOUSEHOLD"}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner la visibilité" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="HOUSEHOLD">Toute la famille</SelectItem>
+                        <SelectItem value="PARTICIPANTS">Participants uniquement</SelectItem>
+                    </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                    "Participants uniquement" rendra la tâche visible seulement aux personnes assignées.
+                </p>
             </div>
 
             <div>

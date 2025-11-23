@@ -4,7 +4,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, Dr
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { Clock, Calendar as CalendarIcon, Tag, Trash2, Users, Pencil, Copy } from "lucide-react"
+import { Clock, Calendar as CalendarIcon, Tag, Trash2, Users, Pencil, Copy, Lock, FileText } from "lucide-react"
 import { deleteEvent } from "@/server/actions"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -126,6 +126,19 @@ export function EventDetailsDrawer({ event, members, isOpen, onClose }: EventDet
                     ) : (
                         <>
                             <div className="p-4 space-y-6">
+                                {/* Date */}
+                                <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
+                                    <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
+                                        <CalendarIcon className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{TEXTS.event.date}</p>
+                                        <p className="font-semibold capitalize">
+                                            {format(new Date(event.startTime), "EEEE d MMMM yyyy", { locale: fr })}
+                                        </p>
+                                    </div>
+                                </div>
+
                                 {/* Time */}
                                 <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
                                     <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
@@ -142,32 +155,18 @@ export function EventDetailsDrawer({ event, members, isOpen, onClose }: EventDet
                                     </div>
                                 </div>
 
-                                {/* Date */}
-                                <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
-                                    <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
-                                        <CalendarIcon className="w-5 h-5" />
+                                {/* Description */}
+                                {event.description && (
+                                    <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
+                                        <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm text-muted-foreground">Description</p>
+                                            <p className="font-medium whitespace-pre-wrap">{event.description}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">{TEXTS.event.date}</p>
-                                        <p className="font-semibold capitalize">
-                                            {format(new Date(event.startTime), "EEEE d MMMM yyyy", { locale: fr })}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Category */}
-                                <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
-                                    <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
-                                        <Tag className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">{TEXTS.event.category}</p>
-                                        <p className="font-semibold capitalize">
-                                            {event.category.toLowerCase()}
-                                        </p>
-                                    </div>
-                                </div>
-
+                                )}
                                 {/* Participants */}
                                 <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
                                     <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
@@ -195,6 +194,34 @@ export function EventDetailsDrawer({ event, members, isOpen, onClose }: EventDet
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Visibility */}
+                                <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
+                                    <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
+                                        {event.visibility === 'PARTICIPANTS' ? <Lock className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Visibilité</p>
+                                        <p className="font-semibold capitalize">
+                                            {event.visibility === 'PARTICIPANTS' ? 'Participants uniquement' : 'Toute la famille'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Category */}
+                                <div className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-muted/20 rounded-xl">
+                                    <div className="p-2 bg-white dark:bg-card rounded-lg shadow-sm text-primary">
+                                        <Tag className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{TEXTS.event.category}</p>
+                                        <p className="font-semibold capitalize">
+                                            {event.category.toLowerCase()}
+                                        </p>
+                                    </div>
+                                </div>
+
+
                             </div>
 
                             <DrawerFooter className="pt-2">

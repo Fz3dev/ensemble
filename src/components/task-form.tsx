@@ -95,6 +95,22 @@ export function TaskForm({ householdId, members, onSuccess }: TaskFormProps) {
             </div>
 
             <div>
+                <label className="text-sm font-medium mb-1 block">Visibilité</label>
+                <Select name="visibility" defaultValue="HOUSEHOLD">
+                    <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner la visibilité" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="HOUSEHOLD">Toute la famille</SelectItem>
+                        <SelectItem value="PARTICIPANTS">Participants uniquement</SelectItem>
+                    </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                    "Participants uniquement" rendra la tâche visible seulement aux personnes assignées.
+                </p>
+            </div>
+
+            <div>
                 <label className="text-sm font-medium mb-2 block">Assigné à</label>
                 <MemberSelector
                     members={members}

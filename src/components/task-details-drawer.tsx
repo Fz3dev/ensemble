@@ -148,45 +148,47 @@ export function TaskDetailsDrawer({ task, members, isOpen, onClose }: TaskDetail
                                 </div>
                             </div>
 
-                            <DrawerFooter className="flex-row gap-2">
-                                <Button
-                                    variant="outline"
-                                    className="flex-1"
-                                    onClick={() => setIsEditing(true)}
-                                >
-                                    <Pencil className="h-4 w-4 mr-2" />
-                                    Modifier
-                                </Button>
+                            <DrawerFooter className="flex-col gap-2">
+                                <div className="flex gap-2 w-full">
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() => setIsEditing(true)}
+                                    >
+                                        <Pencil className="h-4 w-4 mr-2" />
+                                        Modifier
+                                    </Button>
 
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                        <Button variant="destructive" className="flex-1">
-                                            <Trash2 className="h-4 w-4 mr-2" />
-                                            Supprimer
-                                        </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                            <AlertDialogTitle>Supprimer la tâche ?</AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                                Cette action est irréversible. La tâche sera définitivement supprimée.
-                                            </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                            <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                            <AlertDialogAction
-                                                onClick={handleDelete}
-                                                disabled={isDeleting}
-                                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                            >
-                                                {isDeleting ? "Suppression..." : "Supprimer"}
-                                            </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button variant="destructive" className="flex-1">
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Supprimer
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Supprimer la tâche ?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Cette action est irréversible. La tâche sera définitivement supprimée.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                <AlertDialogAction
+                                                    onClick={handleDelete}
+                                                    disabled={isDeleting}
+                                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                >
+                                                    {isDeleting ? "Suppression..." : "Supprimer"}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
 
                                 <DrawerClose asChild>
-                                    <Button variant="ghost">Fermer</Button>
+                                    <Button variant="ghost" className="w-full">Fermer</Button>
                                 </DrawerClose>
                             </DrawerFooter>
                         </>
