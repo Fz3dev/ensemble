@@ -31,6 +31,8 @@ export const TEXTS = {
         noTasks: "Aucune tâche pour le moment",
         members: "Membres",
         noMembers: "Aucun membre trouvé",
+        createEvent: "Créer un nouvel événement",
+        createTask: "Créer une nouvelle tâche",
     },
     navigation: {
         home: "Accueil",

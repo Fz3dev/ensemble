@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent } from "@/components/ui/card"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
-import { CalendarDays, CheckCircle2, Clock, Plus, ArrowRight } from "lucide-react"
+import { CalendarDays, CheckCircle2, Clock, Plus, ArrowRight, CalendarPlus, ClipboardList } from "lucide-react"
 import { FadeIn, ScaleIn } from "@/components/animations"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -11,6 +11,8 @@ import { TEXTS } from "@/lib/constants/texts"
 import { DashboardEvents } from "@/components/dashboard-events"
 import { TaskCard } from "@/components/task-card"
 import { DashboardTaskList } from "@/components/dashboard-task-list"
+import { CreateEventButton } from "@/components/create-event-button"
+import { CreateTaskButton } from "@/components/create-task-button"
 
 export default async function HouseholdPage({ params }: { params: { householdId: string } }) {
     const session = await auth()
@@ -135,28 +137,28 @@ export default async function HouseholdPage({ params }: { params: { householdId:
             {/* Quick Actions Grid */}
             <div className="grid grid-cols-2 gap-4">
                 <FadeIn delay={0.2}>
-                    <Link href={`/household/${params.householdId}/calendar`} className="block group">
-                        <Card className="h-full border-0 shadow-sm bg-orange-50/50 hover:bg-orange-50 dark:bg-orange-900/10 dark:hover:bg-orange-900/20 transition-colors">
+                    <CreateEventButton householdId={params.householdId} members={members}>
+                        <Card className="h-full border-0 shadow-sm bg-orange-50/50 hover:bg-orange-50 dark:bg-orange-900/10 dark:hover:bg-orange-900/20 transition-colors cursor-pointer">
                             <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
                                 <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <CalendarDays className="w-6 h-6" />
+                                    <CalendarPlus className="w-6 h-6" />
                                 </div>
-                                <span className="font-semibold text-foreground">{TEXTS.navigation.calendar}</span>
+                                <span className="font-semibold text-foreground">{TEXTS.dashboard.createEvent}</span>
                             </CardContent>
                         </Card>
-                    </Link>
+                    </CreateEventButton>
                 </FadeIn>
                 <FadeIn delay={0.3}>
-                    <Link href={`/household/${params.householdId}/tasks`} className="block group">
-                        <Card className="h-full border-0 shadow-sm bg-emerald-50/50 hover:bg-emerald-50 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20 transition-colors">
+                    <CreateTaskButton householdId={params.householdId} members={members}>
+                        <Card className="h-full border-0 shadow-sm bg-emerald-50/50 hover:bg-emerald-50 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20 transition-colors cursor-pointer">
                             <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                    <CheckCircle2 className="w-6 h-6" />
+                                    <ClipboardList className="w-6 h-6" />
                                 </div>
-                                <span className="font-semibold text-foreground">{TEXTS.navigation.tasks}</span>
+                                <span className="font-semibold text-foreground">{TEXTS.dashboard.createTask}</span>
                             </CardContent>
                         </Card>
-                    </Link>
+                    </CreateTaskButton>
                 </FadeIn>
             </div>
 

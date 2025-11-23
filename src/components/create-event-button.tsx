@@ -18,18 +18,21 @@ interface CreateEventButtonProps {
     householdId: string
     members: any[]
     initialData?: any
+    children?: React.ReactNode
 }
 
-export function CreateEventButton({ householdId, members, initialData }: CreateEventButtonProps) {
+export function CreateEventButton({ householdId, members, initialData, children }: CreateEventButtonProps) {
     const [open, setOpen] = useState(false)
 
     return (
         <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
-                <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {TEXTS.calendar.addEvent}
-                </Button>
+                {children || (
+                    <Button size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        {TEXTS.calendar.addEvent}
+                    </Button>
+                )}
             </DrawerTrigger>
             <DrawerContent className="max-h-[75vh]">
                 <div className="mx-auto w-full max-w-sm overflow-y-auto">
